@@ -16,6 +16,7 @@ import { Pill } from "@/components/Pill";
 import { buildBenchmarkSeries, buildDrawdownSeries } from "@/data/mockBenchmark";
 import { fmtPct } from "@/lib/format";
 import { usePortfolio } from "@/context/PortfolioContext";
+import { chartTooltipStyle, chartTooltipItemStyle } from "@/lib/chartTheme";
 
 // This view currently runs on illustrative time-series data — once a live
 // pricing feed is wired in, the metric block, drawdown chart, and rolling
@@ -97,7 +98,7 @@ export function RiskPerformance() {
                 <CartesianGrid stroke="#1e293b" strokeDasharray="2 4" vertical={false} />
                 <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickFormatter={(d) => d.slice(5)} />
                 <YAxis stroke="#64748b" fontSize={11} domain={["dataMin - 2", "dataMax + 2"]} />
-                <Tooltip contentStyle={{ background: "#0f1525", border: "1px solid #1e293b", borderRadius: 8, fontSize: 12 }} />
+                <Tooltip contentStyle={chartTooltipStyle} itemStyle={chartTooltipItemStyle} />
                 <Area type="monotone" dataKey="benchmark" stroke="#64748b" strokeWidth={1.5} fill="transparent" />
                 <Area type="monotone" dataKey="portfolio" stroke="#d4af37" strokeWidth={2} fill="url(#rp-port)" />
               </AreaChart>
@@ -120,7 +121,7 @@ export function RiskPerformance() {
                 <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => `${v.toFixed(0)}%`} />
                 <Tooltip
                   formatter={(v: number) => `${v.toFixed(2)}%`}
-                  contentStyle={{ background: "#0f1525", border: "1px solid #1e293b", borderRadius: 8, fontSize: 12 }}
+                  contentStyle={chartTooltipStyle} itemStyle={chartTooltipItemStyle}
                 />
                 <Area type="monotone" dataKey="drawdown" stroke="#ef4444" strokeWidth={1.5} fill="url(#dd)" />
               </AreaChart>
@@ -188,7 +189,7 @@ export function RiskPerformance() {
               <XAxis dataKey="period" stroke="#64748b" fontSize={11} />
               <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => `${v}%`} />
               <Tooltip
-                contentStyle={{ background: "#0f1525", border: "1px solid #1e293b", borderRadius: 8, fontSize: 12 }}
+                contentStyle={chartTooltipStyle} itemStyle={chartTooltipItemStyle}
                 formatter={(v: number) => `${v.toFixed(2)}%`}
               />
               <Bar dataKey="up" fill="#10b981" stackId="stack" radius={[3, 3, 0, 0]} />

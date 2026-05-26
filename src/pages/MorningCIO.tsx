@@ -24,6 +24,7 @@ import { activeHoldings, usePortfolio } from "@/context/PortfolioContext";
 import { fmtCurrency, fmtPct, changeColor, relativeTime } from "@/lib/format";
 import { buildBenchmarkSeries } from "@/data/mockBenchmark";
 import { MOCK_NEWS } from "@/data/mockNews";
+import { chartTooltipStyle, chartTooltipLabelStyle, chartTooltipItemStyle } from "@/lib/chartTheme";
 import { MOCK_RECOMMENDATIONS } from "@/data/mockRecommendations";
 
 export function MorningCIO() {
@@ -124,13 +125,9 @@ export function MorningCIO() {
                 <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickFormatter={(d) => d.slice(5)} />
                 <YAxis stroke="#64748b" fontSize={11} domain={["dataMin - 2", "dataMax + 2"]} />
                 <Tooltip
-                  contentStyle={{
-                    background: "#0f1525",
-                    border: "1px solid #1e293b",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                  labelStyle={{ color: "#94a3b8" }}
+                  contentStyle={chartTooltipStyle}
+                  labelStyle={chartTooltipLabelStyle}
+                  itemStyle={chartTooltipItemStyle}
                 />
                 <Area type="monotone" dataKey="benchmark" stroke="#64748b" strokeWidth={1.5} fill="url(#bench)" name="Benchmark" />
                 <Area type="monotone" dataKey="portfolio" stroke="#d4af37" strokeWidth={2} fill="url(#port)" name="Portfolio" />

@@ -4,9 +4,20 @@
 
 :root {
   color-scheme: light;
+  /* Recharts tooltip — overridden in html.dark below */
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #d9cfb8;
+  --chart-tooltip-text: #1c1917;
+  --chart-tooltip-muted: #57534e;
+  --chart-tooltip-shadow: 0 6px 24px rgba(120, 113, 108, 0.18);
 }
 html.dark {
   color-scheme: dark;
+  --chart-tooltip-bg: #0f1525;
+  --chart-tooltip-border: #1e293b;
+  --chart-tooltip-text: #e2e8f0;
+  --chart-tooltip-muted: #94a3b8;
+  --chart-tooltip-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
 }
 
 html,
@@ -235,6 +246,6 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
    mode that gradient becomes a warm gold tone via its own from/to classes —
    leaving it alone keeps the brand mark distinct against beige. */
 
-/* Recharts tooltip popovers reference dark hex colors inline — they keep
-   their dark style intentionally so the chart legend stays legible against
-   the brighter beige chart background. */
+/* Recharts tooltips read --chart-tooltip-* CSS variables (defined in :root +
+   html.dark above). Charts pass `chartTooltipStyle` from src/lib/chartTheme.ts
+   so a single source of truth controls bg/border/text across both themes. */

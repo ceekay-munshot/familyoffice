@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { activeHoldings, usePortfolio } from "@/context/PortfolioContext";
 import { fmtCurrency } from "@/lib/format";
+import { chartTooltipStyle, chartTooltipItemStyle } from "@/lib/chartTheme";
 
 const PALETTE = [
   "#d4af37",
@@ -91,7 +92,7 @@ export function SectorComposition() {
                 </Pie>
                 <Tooltip
                   formatter={(v: number) => fmtCurrency(v, portfolio.baseCurrency, { compact: true })}
-                  contentStyle={{ background: "#0f1525", border: "1px solid #1e293b", borderRadius: 8, fontSize: 12 }}
+                  contentStyle={chartTooltipStyle} itemStyle={chartTooltipItemStyle}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -122,7 +123,7 @@ export function SectorComposition() {
                 />
                 <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => `${v}%`} />
                 <Tooltip
-                  contentStyle={{ background: "#0f1525", border: "1px solid #1e293b", borderRadius: 8, fontSize: 12 }}
+                  contentStyle={chartTooltipStyle} itemStyle={chartTooltipItemStyle}
                   formatter={(v: number) => `${v.toFixed(1)}%`}
                   labelFormatter={(_, payload) => (payload?.[0]?.payload?.fullName as string) ?? ""}
                 />

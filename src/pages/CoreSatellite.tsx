@@ -16,6 +16,7 @@ import { Card } from "@/components/Card";
 import { Pill } from "@/components/Pill";
 import { activeHoldings, holdingsByCoreSatellite, usePortfolio } from "@/context/PortfolioContext";
 import { changeColor, fmtCurrency, fmtPct } from "@/lib/format";
+import { chartTooltipStyle, chartTooltipItemStyle } from "@/lib/chartTheme";
 
 // Default IC target if the upload doesn't specify one.
 const DEFAULT_CORE_TARGET = 0.7;
@@ -70,7 +71,7 @@ export function CoreSatellite() {
                 </Pie>
                 <Tooltip
                   formatter={(v: number) => fmtCurrency(v, portfolio.baseCurrency, { compact: true })}
-                  contentStyle={{ background: "#0f1525", border: "1px solid #1e293b", borderRadius: 8, fontSize: 12 }}
+                  contentStyle={chartTooltipStyle} itemStyle={chartTooltipItemStyle}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -99,7 +100,7 @@ export function CoreSatellite() {
                 <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                 <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => `${v}%`} />
                 <Tooltip
-                  contentStyle={{ background: "#0f1525", border: "1px solid #1e293b", borderRadius: 8, fontSize: 12 }}
+                  contentStyle={chartTooltipStyle} itemStyle={chartTooltipItemStyle}
                   formatter={(v: number) => `${v.toFixed(1)}%`}
                 />
                 <Bar dataKey="Target" fill="#1e293b" radius={[4, 4, 0, 0]} />

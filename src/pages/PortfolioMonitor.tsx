@@ -80,7 +80,7 @@ export function PortfolioMonitor() {
   const totalFilteredWeight = rows.reduce((s, h) => s + h.portfolioWeight, 0);
 
   return (
-    <div>
+    <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         eyebrow="Holdings"
         title="Portfolio Monitor"
@@ -104,12 +104,27 @@ export function PortfolioMonitor() {
         </div>
       </Card>
 
-      <Card pad={false}>
-        <div className="overflow-x-auto">
+      <Card pad={false} className="flex min-h-0 flex-1 flex-col">
+        <div className="min-h-0 flex-1 overflow-auto">
           <table className="min-w-full">
-            <thead className="border-b border-slate-800">
-              <tr>
-                {head("Ticker", "ticker", "left")}
+            <thead>
+              <tr className="sticky top-0 z-20 border-b border-slate-800 bg-ink-800">
+                <th
+                  scope="col"
+                  className="sticky left-0 z-30 cursor-pointer select-none bg-ink-800 px-3 py-2 text-left label-xs font-medium"
+                  onClick={() => {
+                    if (sortKey === "ticker") setSortDesc((d) => !d);
+                    else {
+                      setSortKey("ticker");
+                      setSortDesc(true);
+                    }
+                  }}
+                >
+                  <span className={`inline-flex items-center gap-1 ${sortKey === "ticker" ? "text-slate-200" : ""}`}>
+                    Ticker
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                  </span>
+                </th>
                 <th className="label-xs px-3 py-2 text-left font-medium">Company</th>
                 <th className="label-xs px-3 py-2 text-left font-medium">Sector</th>
                 <th className="label-xs px-3 py-2 text-left font-medium">Class</th>
@@ -127,8 +142,8 @@ export function PortfolioMonitor() {
               {rows.map((h) => {
                 const curr = holdingCurrency(h.geography);
                 return (
-                  <tr key={h.ticker} className="text-sm hover:bg-slate-800/30">
-                    <td className="px-3 py-2.5">
+                  <tr key={h.ticker} className="group text-sm hover:bg-slate-800/30">
+                    <td className="sticky left-0 z-10 bg-ink-800 px-3 py-2.5 group-hover:bg-ink-700">
                       <div className="mono font-semibold text-slate-100">{h.ticker}</div>
                       <div className="text-[10px] text-slate-500">{h.geography}</div>
                     </td>
