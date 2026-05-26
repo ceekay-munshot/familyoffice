@@ -149,6 +149,7 @@ export function UploadPortfolio() {
           holdingsCount={staged.parse.holdings.length}
           rawRowCount={staged.parse.rawRowCount}
           totalValue={staged.parse.totalValue}
+          baseCurrency={staged.parse.baseCurrency}
           fileName={staged.parse.fileName}
           changeSummary={staged.changeSummary}
           hasPrevious={!!portfolio}
@@ -186,6 +187,7 @@ function StagingReview({
   holdingsCount,
   rawRowCount,
   totalValue,
+  baseCurrency,
   fileName,
   changeSummary,
   hasPrevious,
@@ -199,6 +201,7 @@ function StagingReview({
   holdingsCount: number;
   rawRowCount: number;
   totalValue: number;
+  baseCurrency: string;
   fileName: string;
   changeSummary: ChangeSummary;
   hasPrevious: boolean;
@@ -222,7 +225,7 @@ function StagingReview({
         <div className="mx-auto mt-5 inline-flex items-center gap-6 rounded-lg border border-slate-800 bg-slate-800/30 px-5 py-3">
           <Stat label="Holdings" value={holdingsCount} />
           <div className="h-8 w-px bg-slate-700/60" />
-          <Stat label="Total value" value={fmtCurrency(totalValue, "USD", { compact: true })} />
+          <Stat label="Total value" value={fmtCurrency(totalValue, baseCurrency, { compact: true })} />
           {usableSectorCount > 0 && (
             <>
               <div className="h-8 w-px bg-slate-700/60" />
@@ -327,7 +330,7 @@ function StagingReview({
                 <Row label="Holdings accepted" value={String(holdingsCount)} />
                 <Row label="Rows in file" value={String(rawRowCount)} />
                 <Row label="Rows skipped" value={String(rawRowCount - holdingsCount)} />
-                <Row label="Total value" value={fmtCurrency(totalValue, "USD", { compact: true })} />
+                <Row label="Total value" value={fmtCurrency(totalValue, baseCurrency, { compact: true })} />
               </ul>
             </div>
           </div>
