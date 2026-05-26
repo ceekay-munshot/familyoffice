@@ -36,7 +36,7 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   quantity: ["quantity", "qty", "shares", "units", "holdings", "position"],
   averageCost: ["averagecost", "avgcost", "avgprice", "averageprice", "cost", "costprice", "buyprice"],
   currentPrice: ["currentprice", "cmp", "ltp", "lasttradedprice", "price", "marketprice", "mktprice", "currentmarketprice"],
-  marketValue: ["marketvalue", "mv", "value", "currentvalue", "positionvalue"],
+  marketValue: ["marketvalue", "mktvalue", "mv", "value", "currentvalue", "positionvalue"],
   portfolioWeight: ["portfolioweight", "weight", "weightpct", "weightpercent", "wt", "allocation"],
   coreSatellite: ["coresatellite", "coresat", "classification", "bucket", "sleeve"],
   benchmark: ["benchmark", "bench", "index"],

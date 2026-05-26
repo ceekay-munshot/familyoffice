@@ -85,13 +85,153 @@ body {
   }
 }
 
-/* light mode tokens (class-based) */
+/* ---------------------------------------------------------------------------
+   LIGHT MODE — Warm Beige Theme
+   ---------------------------------------------------------------------------
+   The dark theme uses the ink-* palette (slate-blue tones). In light mode
+   we remap those exact utility classes to a warm beige palette so the whole
+   page — page background, sidebar, top bar, dashboard header, cards — all
+   shift to a consistent cream/beige look without rewriting components.
+
+   Palette:
+     #efe6d2  page base (warm cream, slightly tan)
+     #f5eedc  surface low (sidebar / top bar / dashboard strip)
+     #fbf6e8  surface mid (subtle elevations)
+     #ffffff  surface high (cards)
+     #d9cfb8  border default
+     #e6dcc6  border subtle
+     #1c1917  text primary  (warm dark)
+     #44403c  text secondary
+     #78716c  text tertiary
+     #a8a29e  text quaternary
+   ----------------------------------------------------------------------- */
+
+html:not(.dark) {
+  color-scheme: light;
+}
+
 html:not(.dark) body {
-  background: #f6f7fb;
-  color: #0f172a;
+  background: #efe6d2;
+  color: #1c1917;
 }
+
+/* Page-level backgrounds (chassis: page, sidebar, top bar, header strip) */
+html:not(.dark) .bg-ink-950 { background-color: #efe6d2; }
+html:not(.dark) .bg-ink-900 { background-color: #f5eedc; }
+html:not(.dark) .bg-ink-900\/85 { background-color: rgba(245, 238, 220, 0.92); }
+html:not(.dark) .bg-ink-900\/60 { background-color: rgba(245, 238, 220, 0.7); }
+html:not(.dark) .bg-ink-800 { background-color: #ffffff; }
+html:not(.dark) .bg-ink-800\/85 { background-color: rgba(255, 255, 255, 0.92); }
+html:not(.dark) .bg-ink-800\/60 { background-color: rgba(255, 255, 255, 0.7); }
+html:not(.dark) .bg-ink-800\/30 { background-color: rgba(255, 255, 255, 0.4); }
+html:not(.dark) .bg-ink-700 { background-color: #fbf6e8; }
+html:not(.dark) .bg-ink-700\/40 { background-color: rgba(251, 246, 232, 0.7); }
+html:not(.dark) .bg-ink-700\/30 { background-color: rgba(251, 246, 232, 0.55); }
+
+/* Slate backgrounds used for hover states and inner panels */
+html:not(.dark) .bg-slate-900 { background-color: #f5eedc; }
+html:not(.dark) .bg-slate-800 { background-color: #ebe2cb; }
+html:not(.dark) .bg-slate-800\/80 { background-color: rgba(235, 226, 203, 0.85); }
+html:not(.dark) .bg-slate-800\/60 { background-color: rgba(235, 226, 203, 0.55); }
+html:not(.dark) .bg-slate-800\/40 { background-color: rgba(235, 226, 203, 0.4); }
+html:not(.dark) .bg-slate-800\/30 { background-color: rgba(235, 226, 203, 0.3); }
+html:not(.dark) .bg-slate-800\/20 { background-color: rgba(235, 226, 203, 0.2); }
+html:not(.dark) .bg-slate-700 { background-color: #d9cfb8; }
+html:not(.dark) .bg-slate-700\/60 { background-color: rgba(217, 207, 184, 0.5); }
+html:not(.dark) .bg-slate-700\/40 { background-color: rgba(217, 207, 184, 0.4); }
+html:not(.dark) .bg-slate-700\/30 { background-color: rgba(217, 207, 184, 0.3); }
+
+/* Borders */
+html:not(.dark) .border-slate-700 { border-color: #d9cfb8; }
+html:not(.dark) .border-slate-800 { border-color: #e6dcc6; }
+html:not(.dark) .border-slate-800\/70 { border-color: rgba(230, 220, 198, 0.85); }
+html:not(.dark) .divide-slate-800 > * + *,
+html:not(.dark) .divide-slate-800\/70 > * + * { border-color: #e6dcc6; }
+
+/* Text — remap slate-* greys to warm stone-* on cream */
+html:not(.dark) .text-slate-100 { color: #1c1917; }
+html:not(.dark) .text-slate-200 { color: #292524; }
+html:not(.dark) .text-slate-300 { color: #44403c; }
+html:not(.dark) .text-slate-400 { color: #57534e; }
+html:not(.dark) .text-slate-500 { color: #78716c; }
+html:not(.dark) .text-slate-600 { color: #a8a29e; }
+html:not(.dark) .text-slate-700 { color: #d6d3d1; }
+
+/* Placeholders */
+html:not(.dark) .placeholder-slate-500::placeholder { color: #a8a29e; }
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder { color: #a8a29e; }
+
+/* Card */
 html:not(.dark) .card {
-  background: #ffffff;
-  border-color: #e5e7eb;
-  color: #0f172a;
+  background-color: #ffffff;
+  border-color: #e6dcc6;
+  color: #1c1917;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.6) inset, 0 1px 3px 0 rgba(120, 113, 108, 0.08);
 }
+
+/* Buttons */
+html:not(.dark) .btn-ghost {
+  border-color: #d9cfb8;
+  color: #292524;
+  background-color: transparent;
+}
+html:not(.dark) .btn-ghost:hover {
+  background-color: rgba(217, 207, 184, 0.35);
+}
+html:not(.dark) .btn-primary {
+  background-color: #b08f25;
+  color: #ffffff;
+}
+html:not(.dark) .btn-primary:hover {
+  background-color: #d4af37;
+  color: #1c1917;
+}
+
+/* Pills */
+html:not(.dark) .pill {
+  border-color: #d9cfb8;
+  background-color: rgba(255, 255, 255, 0.6);
+  color: #44403c;
+}
+
+/* Grid background — use warm tinted lines */
+html:not(.dark) .bg-grid {
+  background-image:
+    linear-gradient(rgba(120, 113, 108, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 113, 108, 0.06) 1px, transparent 1px);
+}
+
+/* Inputs, selects */
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="search"],
+html:not(.dark) input[type="file"],
+html:not(.dark) input[type="number"],
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff;
+  border-color: #d9cfb8;
+  color: #1c1917;
+}
+
+/* Checkbox styling */
+html:not(.dark) input[type="checkbox"] {
+  background-color: #ffffff;
+  border-color: #d9cfb8;
+}
+
+/* Scrollbar */
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: rgba(120, 113, 108, 0.25);
+}
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 113, 108, 0.45);
+}
+
+/* Logo block on the sidebar uses a slate->white gradient base; in light
+   mode that gradient becomes a warm gold tone via its own from/to classes —
+   leaving it alone keeps the brand mark distinct against beige. */
+
+/* Recharts tooltip popovers reference dark hex colors inline — they keep
+   their dark style intentionally so the chart legend stays legible against
+   the brighter beige chart background. */
