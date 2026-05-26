@@ -26,10 +26,12 @@ export function CoreSatellite() {
   if (!portfolio) return null;
 
   const cs = holdingsByCoreSatellite(portfolio);
-  const equityTotal = cs.Core.reduce((s, h) => s + h.marketValue, 0) + cs.Satellite.reduce((s, h) => s + h.marketValue, 0);
+  const mvOf = (h: { marketValueBase?: number; marketValue: number }) =>
+    h.marketValueBase ?? h.marketValue;
+  const equityTotal = cs.Core.reduce((s, h) => s + mvOf(h), 0) + cs.Satellite.reduce((s, h) => s + mvOf(h), 0);
 
-  const coreMV = cs.Core.reduce((s, h) => s + h.marketValue, 0);
-  const satMV = cs.Satellite.reduce((s, h) => s + h.marketValue, 0);
+  const coreMV = cs.Core.reduce((s, h) => s + mvOf(h), 0);
+  const satMV = cs.Satellite.reduce((s, h) => s + mvOf(h), 0);
   const coreActual = equityTotal > 0 ? coreMV / equityTotal : 0;
   const satActual = equityTotal > 0 ? satMV / equityTotal : 0;
   const coreDrift = (coreActual - DEFAULT_CORE_TARGET) * 100;
@@ -131,8 +133,8 @@ export function CoreSatellite() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         {(["Core", "Satellite"] as const).map((sleeve) => {
-          const holdings = cs[sleeve].sort((a, b) => b.marketValue - a.marketValue);
-          const sleeveMV = holdings.reduce((s, h) => s + h.marketValue, 0);
+          const holdings = cs[sleeve].sort((a, b) => mvOf(b) - mvOf(a));
+          const sleeveMV = holdings.reduce((s, h) => s + mvOf(h), 0);
           return (
             <Card key={sleeve} title={`${sleeve} sleeve`} subtitle={`${holdings.length} positions · ${fmtCurrency(sleeveMV, portfolio.baseCurrency, { compact: true })}`} pad={false}>
               {holdings.length === 0 ? (
@@ -151,21 +153,24 @@ export function CoreSatellite() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/70 text-sm">
-                    {holdings.map((h) => (
-                      <tr key={h.ticker} className="hover:bg-slate-800/30">
-                        <td className="px-4 py-2 mono font-semibold text-slate-100">{h.ticker}</td>
-                        <td className="px-4 py-2 text-slate-400 truncate max-w-[200px]">{h.companyName}</td>
-                        <td className="px-4 py-2 text-right mono text-slate-200">
-                          {fmtCurrency(h.marketValue, portfolio.baseCurrency, { compact: true })}
-                        </td>
-                        <td className="px-4 py-2 text-right mono text-slate-300">
-                          {sleeveMV > 0 ? ((h.marketValue / sleeveMV) * 100).toFixed(1) : "0"}%
-                        </td>
-                        <td className={`px-4 py-2 text-right mono ${changeColor(h.returnPct)}`}>
-                          {fmtPct(h.returnPct, { sign: true })}
-                        </td>
-                      </tr>
-                    ))}
+                    {holdings.map((h) => {
+                      const mv = mvOf(h);
+                      return (
+                        <tr key={h.ticker} className="hover:bg-slate-800/30">
+                          <td className="px-4 py-2 mono font-semibold text-slate-100">{h.ticker}</td>
+                          <td className="px-4 py-2 text-slate-400 truncate max-w-[200px]">{h.companyName}</td>
+                          <td className="px-4 py-2 text-right mono text-slate-200">
+                            {fmtCurrency(mv, portfolio.baseCurrency, { compact: true })}
+                          </td>
+                          <td className="px-4 py-2 text-right mono text-slate-300">
+                            {sleeveMV > 0 ? ((mv / sleeveMV) * 100).toFixed(1) : "0"}%
+                          </td>
+                          <td className={`px-4 py-2 text-right mono ${changeColor(h.returnPct)}`}>
+                            {fmtPct(h.returnPct, { sign: true })}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}

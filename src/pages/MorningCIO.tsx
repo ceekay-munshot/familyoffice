@@ -32,8 +32,11 @@ export function MorningCIO() {
 
   const holdings = activeHoldings(portfolio);
   const totalValue = portfolio.totalValue;
-  const totalCost = holdings.reduce((s, h) => s + h.costBasis, 0);
-  const totalPnL = holdings.reduce((s, h) => s + h.unrealizedPnL, 0);
+  // Sum in base currency so mixed-currency portfolios produce a coherent
+  // P&L and cost basis. Fall back to native fields if older holdings
+  // (persisted before the FX layer) lack the Base field.
+  const totalCost = holdings.reduce((s, h) => s + (h.costBasisBase ?? h.costBasis), 0);
+  const totalPnL = holdings.reduce((s, h) => s + (h.unrealizedPnLBase ?? h.unrealizedPnL), 0);
   const totalReturnPct = totalCost > 0 ? (totalPnL / totalCost) * 100 : 0;
 
   // Illustrative benchmark series — labeled clearly as demo data
@@ -152,7 +155,11 @@ export function MorningCIO() {
                     {fmtPct(h.returnPct, { sign: true })}
                   </div>
                   <div className={`mono text-[11px] ${changeColor(h.unrealizedPnL)}`}>
-                    {fmtCurrency(h.unrealizedPnL, portfolio.baseCurrency, { compact: true, sign: true })}
+                    {fmtCurrency(
+                      h.unrealizedPnLBase ?? h.unrealizedPnL,
+                      portfolio.baseCurrency,
+                      { compact: true, sign: true },
+                    )}
                   </div>
                 </div>
               </li>

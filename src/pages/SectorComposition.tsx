@@ -35,13 +35,16 @@ export function SectorComposition() {
   const { portfolio } = usePortfolio();
   if (!portfolio) return null;
   const holdings = activeHoldings(portfolio);
-  const totalMV = holdings.reduce((s, h) => s + h.marketValue, 0);
+  // Aggregate by FX-normalized market value so sector mix is currency-agnostic.
+  const mvOf = (h: { marketValueBase?: number; marketValue: number }) =>
+    h.marketValueBase ?? h.marketValue;
+  const totalMV = holdings.reduce((s, h) => s + mvOf(h), 0);
 
   const rows = useMemo(() => {
     const map: Record<string, { mv: number; positions: number }> = {};
     for (const h of holdings) {
       map[h.sector] = map[h.sector] || { mv: 0, positions: 0 };
-      map[h.sector].mv += h.marketValue;
+      map[h.sector].mv += mvOf(h);
       map[h.sector].positions += 1;
     }
     return Object.entries(map)

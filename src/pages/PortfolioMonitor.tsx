@@ -73,8 +73,10 @@ export function PortfolioMonitor() {
     );
   }
 
-  const totalFilteredMV = rows.reduce((s, h) => s + h.marketValue, 0);
-  const totalFilteredPnL = rows.reduce((s, h) => s + h.unrealizedPnL, 0);
+  // Footer aggregates use FX-normalized values so the filtered total
+  // matches the header NAV when no filter is applied.
+  const totalFilteredMV = rows.reduce((s, h) => s + (h.marketValueBase ?? h.marketValue), 0);
+  const totalFilteredPnL = rows.reduce((s, h) => s + (h.unrealizedPnLBase ?? h.unrealizedPnL), 0);
   const totalFilteredWeight = rows.reduce((s, h) => s + h.portfolioWeight, 0);
 
   return (

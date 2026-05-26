@@ -90,7 +90,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
           uploadedAt: new Date().toISOString(),
           holdings: parse.holdings,
           totalValue: parse.totalValue,
-          baseCurrency: inferBaseCurrency(parse.holdings),
+          baseCurrency: parse.baseCurrency,
           checksum: parse.checksum,
         };
 
@@ -120,7 +120,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       uploadedAt: new Date().toISOString(),
       holdings: parse.holdings,
       totalValue: parse.totalValue,
-      baseCurrency: inferBaseCurrency(parse.holdings),
+      baseCurrency: parse.baseCurrency,
       checksum: parse.checksum,
     };
 
@@ -222,14 +222,4 @@ export function holdingsByCoreSatellite(pf: Portfolio): Record<"Core" | "Satelli
 
 export function distinctSectors(pf: Portfolio): string[] {
   return Array.from(new Set(activeHoldings(pf).map((h) => h.sector)));
-}
-
-function inferBaseCurrency(hs: Holding[]): "USD" | "INR" | "Mixed" {
-  const geos = new Set(hs.map((h) => h.geography));
-  if (geos.size === 1) {
-    if (geos.has("India")) return "INR";
-    if (geos.has("US")) return "USD";
-  }
-  if (geos.has("India") && geos.size > 1) return "Mixed";
-  return "USD";
 }

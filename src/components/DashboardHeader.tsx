@@ -52,11 +52,22 @@ export function DashboardHeader() {
   const sectors = distinctSectors(portfolio).filter((s) => s !== "Unclassified");
   const sectorCount = sectors.length || distinctSectors(portfolio).length;
   const cs = holdingsByCoreSatellite(portfolio);
-  const coreMV = cs.Core.reduce((s, h) => s + h.marketValue, 0);
-  const satMV = cs.Satellite.reduce((s, h) => s + h.marketValue, 0);
+  // Aggregate in base currency so a mixed-currency portfolio reports a
+  // coherent core/satellite split.
+  const coreMV = cs.Core.reduce((s, h) => s + (h.marketValueBase ?? h.marketValue), 0);
+  const satMV = cs.Satellite.reduce((s, h) => s + (h.marketValueBase ?? h.marketValue), 0);
   const totalMV = coreMV + satMV;
   const corePct = totalMV > 0 ? (coreMV / totalMV) * 100 : 0;
   const satPct = totalMV > 0 ? (satMV / totalMV) * 100 : 0;
+  // If the portfolio mixes currencies, surface that we FX-adjusted the
+  // total. Single-currency portfolios just show the bare currency code.
+  const distinctCurrencies = new Set(
+    portfolio.holdings.map((h) => h.currency).filter(Boolean) as string[],
+  );
+  const totalValueSub =
+    distinctCurrencies.size > 1
+      ? `FX-adjusted to ${portfolio.baseCurrency}`
+      : `In ${portfolio.baseCurrency}`;
 
   return (
     <>
@@ -101,7 +112,7 @@ export function DashboardHeader() {
             icon={<TrendingUp className="h-3.5 w-3.5" />}
             label="Total Value"
             value={fmtCurrency(portfolio.totalValue, portfolio.baseCurrency, { compact: true })}
-            sub={portfolio.baseCurrency === "Mixed" ? "Multi-currency" : `Base: ${portfolio.baseCurrency}`}
+            sub={totalValueSub}
           />
           <SummaryCell
             icon={<Briefcase className="h-3.5 w-3.5" />}

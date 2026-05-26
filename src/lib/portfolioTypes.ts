@@ -22,16 +22,29 @@ export type Holding = {
   quantity: number;
   averageCost: number;
   currentPrice: number;
-  marketValue: number;        // qty * currentPrice if not provided
+  marketValue: number;        // qty * currentPrice if not provided — in native currency
   portfolioWeight: number;    // marketValue / totalValue if not provided
   coreSatellite: CoreSatellite;
   benchmark: string;
   status: HoldingStatus;
 
   // Derived for the dashboard (computed in the parser, not user-supplied).
-  unrealizedPnL: number;      // qty * (currentPrice - averageCost)
+  unrealizedPnL: number;      // qty * (currentPrice - averageCost) — native currency
   returnPct: number;          // (currentPrice - averageCost) / averageCost * 100
-  costBasis: number;          // qty * averageCost
+  costBasis: number;          // qty * averageCost — native currency
+
+  // Native currency for this holding (inferred from geography). Drives
+  // formatting in per-row tables.
+  currency?: string;
+
+  // FX-normalized values in the portfolio's base currency. Pages that
+  // aggregate across holdings (totals, sleeve breakdowns, sector charts)
+  // read these so mixed-currency portfolios produce a coherent sum.
+  // Optional for backward compatibility with portfolios persisted before
+  // the FX layer landed; consumers should fall back to the native field.
+  marketValueBase?: number;
+  costBasisBase?: number;
+  unrealizedPnLBase?: number;
 
   // Anything else the uploaded file carried (Fwd PE, View, Action Today, etc.).
   // Kept as-is so the dashboard can surface it without losing data.
@@ -43,8 +56,8 @@ export type Portfolio = {
   fileName: string;
   uploadedAt: string;         // ISO timestamp
   holdings: Holding[];
-  totalValue: number;
-  baseCurrency: "USD" | "INR" | "Mixed";
+  totalValue: number;         // in baseCurrency
+  baseCurrency: "USD" | "INR" | "EUR" | "GBP";
   checksum: string;
 };
 
@@ -87,7 +100,8 @@ export type ParseResult = {
   errors: ParseError[];
   warnings: ParseWarning[];
   fieldMappings: FieldMappingTrace[];
-  totalValue: number;
+  totalValue: number;                                // expressed in baseCurrency
+  baseCurrency: "USD" | "INR" | "EUR" | "GBP";
   checksum: string;
   rawRowCount: number;
 };

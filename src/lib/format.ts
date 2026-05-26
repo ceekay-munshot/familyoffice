@@ -2,25 +2,27 @@
 // so the whole app uses the same conventions (and we don't have 12 versions
 // of "format USD compact").
 
-export type CurrencyCode = "USD" | "INR" | "Mixed";
+export type CurrencyCode = "USD" | "INR" | "EUR" | "GBP";
+
+const LOCALE_BY_CURRENCY: Record<string, string> = {
+  USD: "en-US",
+  INR: "en-IN",
+  EUR: "en-GB",
+  GBP: "en-GB",
+};
 
 export function fmtCurrency(
   n: number,
-  code: CurrencyCode = "USD",
+  code: string = "USD",
   opts?: { compact?: boolean; sign?: boolean },
 ): string {
-  // "Mixed" portfolios contain holdings in multiple currencies; we present
-  // the total in USD as the lowest-common denominator. A future FX layer can
-  // refine this.
-  const effective = code === "Mixed" ? "USD" : code;
-  const locale = effective === "INR" ? "en-IN" : "en-US";
-
+  const locale = LOCALE_BY_CURRENCY[code] ?? "en-US";
   const sign = opts?.sign && n > 0 ? "+" : "";
   const formatted = new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: effective,
+    currency: code,
     notation: opts?.compact ? "compact" : "standard",
-    maximumFractionDigits: opts?.compact ? 2 : 2,
+    maximumFractionDigits: 2,
     minimumFractionDigits: 0,
   }).format(n);
   return sign + formatted;

@@ -20,6 +20,7 @@ import type {
   ParseResult,
   ParseWarning,
 } from "./portfolioTypes";
+import { currencyForGeography, determineBaseCurrency, fxConvert } from "./fx";
 
 // ---------------------------------------------------------------------------
 // Column alias map. Keys are canonical field names; values are alternate
@@ -312,6 +313,7 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
     const costBasis = qty * averageCost;
     const unrealizedPnL = qty * (cmp - averageCost);
     const returnPct = averageCost > 0 ? ((cmp - averageCost) / averageCost) * 100 : 0;
+    const currency = currencyForGeography(geography);
 
     const h: Holding = {
       ticker,
@@ -330,17 +332,39 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
       unrealizedPnL,
       returnPct,
       costBasis,
+      currency,
+      // *Base values get filled below once we know the portfolio's base currency.
+      marketValueBase: marketValue,
+      costBasisBase: costBasis,
+      unrealizedPnLBase: unrealizedPnL,
       extra: Object.keys(extra).length ? extra : undefined,
     };
     holdings.push(h);
   });
 
-  // Total value excludes Exited holdings (they're no longer in book).
+  // Decide the portfolio's base currency from the holdings we've parsed.
+  // Single-currency files keep their native currency; mixed files default
+  // to whichever currency dominates by USD-normalized market value.
+  const baseCurrency = determineBaseCurrency(
+    holdings.map((h) => ({ currency: h.currency || "USD", marketValue: h.marketValue })),
+  );
+
+  // FX-normalize the aggregation fields onto every holding.
+  for (const h of holdings) {
+    const from = h.currency || "USD";
+    h.marketValueBase = fxConvert(h.marketValue, from, baseCurrency);
+    h.costBasisBase = fxConvert(h.costBasis, from, baseCurrency);
+    h.unrealizedPnLBase = fxConvert(h.unrealizedPnL, from, baseCurrency);
+  }
+
+  // Total value (in base currency) excludes Exited holdings.
   const totalValue = holdings
     .filter((h) => h.status !== "Exited")
-    .reduce((s, h) => s + h.marketValue, 0);
+    .reduce((s, h) => s + (h.marketValueBase ?? 0), 0);
 
-  // Second pass: portfolioWeight using provided value where present, else computed.
+  // Second pass: portfolioWeight using provided value where present, else
+  // computed from FX-normalized values (so a 1% INR holding shows the same
+  // weight whether the dashboard is in INR or USD).
   const providedWeights = raw.rows.map((row) => toNumber(row[map.portfolioWeight] as unknown));
   let weightFromProvided = false;
   holdings.forEach((h, i) => {
@@ -350,7 +374,7 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
       h.portfolioWeight = p > 1 ? p / 100 : p;
       weightFromProvided = true;
     } else if (totalValue > 0 && h.status !== "Exited") {
-      h.portfolioWeight = h.marketValue / totalValue;
+      h.portfolioWeight = (h.marketValueBase ?? h.marketValue) / totalValue;
     } else {
       h.portfolioWeight = 0;
     }
@@ -389,6 +413,7 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
     warnings,
     fieldMappings: trace,
     totalValue,
+    baseCurrency,
     checksum: checksumOf(holdings),
     rawRowCount: raw.rows.length,
   };
