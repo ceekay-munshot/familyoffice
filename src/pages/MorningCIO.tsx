@@ -183,37 +183,49 @@ export function MorningCIO() {
           }
         >
           <ul className="space-y-3">
-            {relevantNews.slice(0, 4).map((n) => (
-              <li key={n.id} className="flex gap-3 rounded-lg border border-slate-800 bg-ink-700/40 p-3">
-                <div
-                  className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
-                    n.impact === "positive"
-                      ? "bg-emerald-400"
-                      : n.impact === "negative"
-                        ? "bg-rose-400"
-                        : "bg-slate-500"
-                  }`}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <Newspaper className="h-3.5 w-3.5 text-slate-500" />
-                    <span className="text-[11px] uppercase tracking-wider text-slate-500">
-                      {n.source} · {relativeTime(n.date)}
-                    </span>
-                    <Pill tone={n.importance === "high" ? "warn" : "default"} className="ml-auto">
-                      {n.importance}
-                    </Pill>
-                  </div>
-                  <div className="mt-1 text-sm font-medium text-slate-100">{n.title}</div>
-                  <p className="mt-1 text-xs text-slate-400">{n.summary}</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {n.tickers.filter((t) => tickerSet.has(t)).map((t) => (
-                      <Pill key={t}>{t}</Pill>
-                    ))}
-                  </div>
-                </div>
-              </li>
-            ))}
+            {relevantNews.slice(0, 4).map((n) => {
+              const href =
+                n.sourceUrl ??
+                `https://news.google.com/search?q=${encodeURIComponent(`${n.source} ${n.title}`)}`;
+              return (
+                <li key={n.id}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex gap-3 rounded-lg border border-slate-800 bg-ink-700/40 p-3 transition-colors hover:border-gold-400/40 hover:bg-ink-700/60"
+                  >
+                    <div
+                      className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                        n.impact === "positive"
+                          ? "bg-emerald-400"
+                          : n.impact === "negative"
+                            ? "bg-rose-400"
+                            : "bg-slate-500"
+                      }`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Newspaper className="h-3.5 w-3.5 text-slate-500" />
+                        <span className="text-[11px] uppercase tracking-wider text-slate-500">
+                          {n.source} · {relativeTime(n.date)}
+                        </span>
+                        <Pill tone={n.importance === "high" ? "warn" : "default"} className="ml-auto">
+                          {n.importance}
+                        </Pill>
+                      </div>
+                      <div className="mt-1 text-sm font-medium text-slate-100">{n.title}</div>
+                      <p className="mt-1 text-xs text-slate-400">{n.summary}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {n.tickers.filter((t) => tickerSet.has(t)).map((t) => (
+                          <Pill key={t}>{t}</Pill>
+                        ))}
+                      </div>
+                    </div>
+                  </a>
+                </li>
+              );
+            })}
             {relevantNews.length === 0 && (
               <li className="py-6 text-center text-xs text-slate-500">
                 No news items match your current holdings.

@@ -25,6 +25,7 @@ export type NewsItem = {
   tickers: string[];
   sectors: Sector[];
   importance: "high" | "medium" | "low";
+  sourceUrl?: string;
 };
 
 export type BrokerReport = {

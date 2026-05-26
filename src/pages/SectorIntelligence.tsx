@@ -175,33 +175,45 @@ export function SectorIntelligence() {
         {Object.entries(newsBySector).map(([sector, items]) => (
           <Card key={sector} title={sector} subtitle={`${items.length} items`} pad>
             <ul className="space-y-2">
-              {items.map((n) => (
-                <li key={n.id} className="flex gap-3 rounded-md border border-slate-800 bg-ink-700/30 p-3">
-                  <Newspaper className="mt-0.5 h-4 w-4 text-slate-500" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-slate-500">
-                      <span>{n.source}</span>
-                      <span>·</span>
-                      <span>{fmtDate(n.date)}</span>
-                      <span>·</span>
-                      <span>{relativeTime(n.date)}</span>
-                      <Pill
-                        tone={n.impact === "positive" ? "gain" : n.impact === "negative" ? "loss" : "default"}
-                        className="ml-auto"
-                      >
-                        {n.impact}
-                      </Pill>
-                    </div>
-                    <div className="mt-1 text-sm font-medium text-slate-100">{n.title}</div>
-                    <div className="mt-1 text-xs text-slate-400">{n.summary}</div>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {n.tickers.map((t) => (
-                        <Pill key={t} tone={myTickers.has(t) ? "warn" : "default"}>{t}</Pill>
-                      ))}
-                    </div>
-                  </div>
-                </li>
-              ))}
+              {items.map((n) => {
+                const href =
+                  n.sourceUrl ??
+                  `https://news.google.com/search?q=${encodeURIComponent(`${n.source} ${n.title}`)}`;
+                return (
+                  <li key={n.id}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex gap-3 rounded-md border border-slate-800 bg-ink-700/30 p-3 transition-colors hover:border-gold-400/40 hover:bg-ink-700/50"
+                    >
+                      <Newspaper className="mt-0.5 h-4 w-4 text-slate-500" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-slate-500">
+                          <span>{n.source}</span>
+                          <span>·</span>
+                          <span>{fmtDate(n.date)}</span>
+                          <span>·</span>
+                          <span>{relativeTime(n.date)}</span>
+                          <Pill
+                            tone={n.impact === "positive" ? "gain" : n.impact === "negative" ? "loss" : "default"}
+                            className="ml-auto"
+                          >
+                            {n.impact}
+                          </Pill>
+                        </div>
+                        <div className="mt-1 text-sm font-medium text-slate-100">{n.title}</div>
+                        <div className="mt-1 text-xs text-slate-400">{n.summary}</div>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {n.tickers.map((t) => (
+                            <Pill key={t} tone={myTickers.has(t) ? "warn" : "default"}>{t}</Pill>
+                          ))}
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </Card>
         ))}
