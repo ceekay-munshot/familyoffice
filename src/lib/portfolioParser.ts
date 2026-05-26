@@ -131,20 +131,45 @@ function normalizeAssetClass(raw: string): AssetClass {
   return "Equity";
 }
 
-// Best-effort geography inference from a ticker string. Used only when no
-// geography column is present in the file.
+// Best-effort geography inference from a ticker string. Used only when
+// no geography column is present in the file.
+//
+// India-first: our primary user base is Indian family offices, so an
+// ambiguous ticker defaults to India. Known US blue-chip / ETF tickers
+// are matched explicitly so a mixed file with AAPL alongside RELIANCE
+// still gets classified correctly.
+const KNOWN_US_TICKERS = new Set([
+  // mega-cap equities
+  "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NVDA", "TSLA",
+  "BRK.A", "BRK.B", "JPM", "BAC", "WFC", "GS", "MS", "V", "MA", "AXP",
+  "UNH", "JNJ", "LLY", "PFE", "MRK", "ABBV", "TMO", "ABT", "BMY",
+  "KO", "PEP", "WMT", "COST", "PG", "MCD", "SBUX", "NKE", "DIS",
+  "NFLX", "HD", "LOW", "ORCL", "CRM", "ADBE", "INTC", "AMD", "CSCO",
+  "AVGO", "QCOM", "TXN", "IBM", "PYPL", "SHOP", "PLTR", "COIN", "UBER",
+  "XOM", "CVX", "COP", "SLB", "T", "VZ", "TMUS", "F", "GM",
+  "BA", "CAT", "DE", "GE", "HON", "LMT", "RTX", "UPS", "FDX",
+  "BX", "BLK", "SCHW", "C",
+  // common ETFs
+  "SPY", "QQQ", "VTI", "VOO", "DIA", "IWM", "EFA", "EEM", "GLD",
+  "SLV", "BND", "AGG", "TLT", "HYG", "LQD", "ARKK", "SMH", "XLK",
+  "XLF", "XLE", "XLV", "XLY", "XLP", "XLI", "XLU", "XLB", "XLRE",
+]);
+
 function inferGeography(ticker: string): string {
   const t = ticker.toUpperCase();
+
+  // Exchange suffixes are unambiguous.
   if (/\.NS$|\.BO$/.test(t)) return "India";
   if (/\.L$/.test(t)) return "UK";
   if (/\.HK$/.test(t)) return "Hong Kong";
   if (/\.TO$/.test(t)) return "Canada";
-  // Many Indian custodians emit 4–6 letter uppercase codes (TILIND, HDFBAN).
-  // If it doesn't look like a US ticker (≤5 chars, often with vowels), guess India.
-  if (t.length >= 5 && t.length <= 6 && /^[A-Z]+$/.test(t) && !/^[A-Z]{1,4}$/.test(t)) {
-    return "India";
-  }
-  return "Unknown";
+
+  // Known US blue-chips / ETFs.
+  if (KNOWN_US_TICKERS.has(t)) return "US";
+
+  // Default for our Indian-leaning user base — covers BSE/NSE truncations
+  // like TILIND, ULTCEM, TATSTE as well as short Indian symbols like TCS.
+  return "India";
 }
 
 function inferBenchmarkFromGeography(g: string): string {
@@ -152,7 +177,8 @@ function inferBenchmarkFromGeography(g: string): string {
   if (g === "US") return "S&P 500";
   if (g === "UK") return "FTSE 100";
   if (g === "Hong Kong") return "Hang Seng";
-  return "S&P 500";
+  // Indian-first default — matches the rest of the parser's posture.
+  return "NIFTY 50";
 }
 
 // Simple FNV-1a checksum over the canonical row payload. Stable across runs.

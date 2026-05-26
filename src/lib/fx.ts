@@ -41,7 +41,8 @@ export function fxConvert(amount: number, from: string, to: string): number {
 }
 
 // Map a geography string (parsed from the user's file) to an ISO currency
-// code. Anything we don't recognize defaults to USD.
+// code. The product's primary user base is Indian family offices, so
+// anything we can't classify is treated as INR.
 export function currencyForGeography(geo: string): string {
   const map: Record<string, string> = {
     US: "USD",
@@ -60,44 +61,24 @@ export function currencyForGeography(geo: string): string {
     Singapore: "SGD",
     Australia: "AUD",
     China: "CNY",
-    Global: "USD",
-    Unknown: "USD",
+    Global: "INR",
+    Unknown: "INR",
   };
-  return map[geo] ?? "USD";
+  return map[geo] ?? "INR";
 }
 
-function isDisplayCurrency(c: string): c is DisplayCurrency {
-  return (SUPPORTED_DISPLAY_CURRENCIES as readonly string[]).includes(c);
-}
-
-// Pick the base currency for the portfolio:
-//  - If every holding shares the same (supported) currency, use it.
-//  - Otherwise, the currency with the largest USD-normalized market value
-//    wins, falling back to USD if no supported currency dominates.
+// India-first base-currency rule:
+//   - If *every* holding is in USD, the portfolio is a pure-US book and
+//     we display in USD.
+//   - Otherwise (single non-USD currency, or any mixed combination), we
+//     default to INR — the currency our Indian family-office users think
+//     in. Cross-currency holdings get FX-converted to INR for aggregates.
 export function determineBaseCurrency(
   holdings: { currency: string; marketValue: number }[],
 ): DisplayCurrency {
-  if (holdings.length === 0) return "USD";
+  if (holdings.length === 0) return "INR";
 
   const distinct = new Set(holdings.map((h) => h.currency));
-  if (distinct.size === 1) {
-    const only = [...distinct][0];
-    if (isDisplayCurrency(only)) return only;
-  }
-
-  const usdTotals: Record<string, number> = {};
-  for (const h of holdings) {
-    const usd = h.marketValue * rateToUSD(h.currency);
-    usdTotals[h.currency] = (usdTotals[h.currency] || 0) + usd;
-  }
-
-  let bestCode: DisplayCurrency = "USD";
-  let bestUSD = -Infinity;
-  for (const [code, total] of Object.entries(usdTotals)) {
-    if (isDisplayCurrency(code) && total > bestUSD) {
-      bestUSD = total;
-      bestCode = code;
-    }
-  }
-  return bestCode;
+  if (distinct.size === 1 && [...distinct][0] === "USD") return "USD";
+  return "INR";
 }
