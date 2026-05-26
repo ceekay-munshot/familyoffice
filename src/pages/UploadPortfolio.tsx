@@ -16,7 +16,6 @@ import {
   AlertTriangle,
   XCircle,
   Loader2,
-  ShieldCheck,
   ChevronDown,
   ChevronRight,
   Sparkles,
@@ -159,32 +158,18 @@ export function UploadPortfolio() {
         />
       )}
 
-      {/* Minimal idle-state side info */}
-      {!staged && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card pad>
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-400" />
-              <div className="text-xs text-slate-300">
-                <div className="font-medium text-slate-200">Stays on your device</div>
-                <div className="mt-0.5 text-slate-400">Your portfolio is parsed in the browser and stored locally. Nothing leaves this tab.</div>
+      {!staged && portfolio && (
+        <Card pad>
+          <div className="flex items-start gap-3">
+            <Briefcase className="mt-0.5 h-5 w-5 text-gold-400" />
+            <div className="text-xs text-slate-300">
+              <div className="font-medium text-slate-200">Currently loaded: {portfolio.fileName}</div>
+              <div className="mt-0.5 text-slate-400">
+                {portfolio.holdings.length} holdings · uploaded {fmtDateTime(portfolio.uploadedAt)}
               </div>
             </div>
-          </Card>
-          {portfolio && (
-            <Card pad>
-              <div className="flex items-start gap-3">
-                <Briefcase className="mt-0.5 h-5 w-5 text-gold-400" />
-                <div className="text-xs text-slate-300">
-                  <div className="font-medium text-slate-200">Currently loaded: {portfolio.fileName}</div>
-                  <div className="mt-0.5 text-slate-400">
-                    {portfolio.holdings.length} holdings · uploaded {fmtDateTime(portfolio.uploadedAt)}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
-        </div>
+          </div>
+        </Card>
       )}
     </div>
   );
