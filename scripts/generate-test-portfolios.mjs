@@ -21,6 +21,20 @@ import { join } from "node:path";
 
 const downloads = join(homedir(), "Downloads");
 
+// Quantities are scaled by this factor so demo NAVs read like a real
+// family-office book (mid- to upper-eight-figure USD, low thousands of
+// crores INR) instead of a personal account.
+const SCALE = 300;
+
+function scale(rows, qtyKey, mvKey) {
+  return rows.map((r) => {
+    const cloned = { ...r };
+    if (qtyKey in cloned) cloned[qtyKey] = (Number(cloned[qtyKey]) || 0) * SCALE;
+    if (mvKey in cloned) cloned[mvKey] = (Number(cloned[mvKey]) || 0) * SCALE;
+    return cloned;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Portfolio 1 — Singhania Family Office (canonical schema, US + India)
 // ---------------------------------------------------------------------------
@@ -99,7 +113,7 @@ const CANONICAL_HEADERS = [
 ];
 
 writeXLSX(
-  SINGHANIA,
+  scale(SINGHANIA, "quantity", "marketValue"),
   CANONICAL_HEADERS,
   join(downloads, "Singhania Family Office - Growth Tilt Q1 2026.xlsx"),
 );
@@ -130,7 +144,7 @@ const MEHTA = [
 
 const MEHTA_HEADERS = ["Symbol", "Company Name", "Asset Class", "Sector", "Geography", "Qty", "Avg Price", "LTP", "Mkt Value", "Wt %", "Classification", "Benchmark", "Status"];
 
-writeCSV(MEHTA, MEHTA_HEADERS, join(downloads, "Mehta Trust - Income & Stability.csv"));
+writeCSV(scale(MEHTA, "Qty", "Mkt Value"), MEHTA_HEADERS, join(downloads, "Mehta Trust - Income & Stability.csv"));
 
 // ---------------------------------------------------------------------------
 // Portfolio 3 — Aspire Capital (concentrated tech). Overlaps with #1 on
@@ -152,7 +166,7 @@ const ASPIRE = [
 ];
 
 writeXLSX(
-  ASPIRE,
+  scale(ASPIRE, "quantity", "marketValue"),
   CANONICAL_HEADERS,
   join(downloads, "Aspire Capital - Tech Concentration.xlsx"),
 );

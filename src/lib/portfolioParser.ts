@@ -449,19 +449,22 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
 // Sample CSV. Surfaced both as an in-app preview and as a download.
 // ---------------------------------------------------------------------------
 
+// Quantities are scaled 300× vs. realistic individual holdings so the
+// demo NAV reads like a working family office portfolio (~₹2.4k Cr)
+// rather than a personal brokerage account.
 export const SAMPLE_CSV = `ticker,companyName,assetClass,sector,geography,quantity,averageCost,currentPrice,marketValue,portfolioWeight,coreSatellite,benchmark,status
-AAPL,Apple Inc.,Equity,Technology,US,500,148.20,218.60,109300,8.5,Core,S&P 500,Current
-MSFT,Microsoft Corp.,Equity,Technology,US,400,305.50,421.30,168520,13.2,Core,S&P 500,Current
-NVDA,NVIDIA Corp.,Equity,Technology,US,200,412.60,1124.20,224840,17.6,Satellite,S&P 500,Current
-JPM,JPMorgan Chase,Equity,Financials,US,300,158.70,218.40,65520,5.1,Core,S&P 500,Current
-LLY,Eli Lilly & Co.,Equity,Healthcare,US,80,718.00,824.50,65960,5.2,Satellite,S&P 500,Current
-RELIANCE,Reliance Industries,Equity,Energy,India,2500,2380,2912,7280000,8.0,Core,NIFTY 50,Current
-TCS,Tata Consultancy Services,Equity,Technology,India,1500,3624,4148,6222000,6.8,Core,NIFTY 50,Current
-HDFCBANK,HDFC Bank,Equity,Financials,India,3000,1580,1684,5052000,5.5,Core,NIFTY 50,Current
-INFY,Infosys Ltd.,Equity,Technology,India,2000,1462,1842,3684000,4.0,Satellite,NIFTY 50,Current
-SPY,SPDR S&P 500 ETF,ETF,Diversified,US,400,470.40,552.80,221120,17.3,Core,S&P 500,Current
-ZOMATO,Zomato Ltd.,Equity,Consumer Discretionary,India,5000,80.00,142.00,710000,0.8,Satellite,NIFTY 50,Watchlist
-PAYTM,One97 Communications,Equity,Financials,India,1000,520.00,420.00,420000,0.5,Satellite,NIFTY 50,Exited
+AAPL,Apple Inc.,Equity,Technology,US,150000,148.20,218.60,32790000,8.5,Core,S&P 500,Current
+MSFT,Microsoft Corp.,Equity,Technology,US,120000,305.50,421.30,50556000,13.2,Core,S&P 500,Current
+NVDA,NVIDIA Corp.,Equity,Technology,US,60000,412.60,1124.20,67452000,17.6,Satellite,S&P 500,Current
+JPM,JPMorgan Chase,Equity,Financials,US,90000,158.70,218.40,19656000,5.1,Core,S&P 500,Current
+LLY,Eli Lilly & Co.,Equity,Healthcare,US,24000,718.00,824.50,19788000,5.2,Satellite,S&P 500,Current
+RELIANCE,Reliance Industries,Equity,Energy,India,750000,2380,2912,2184000000,8.0,Core,NIFTY 50,Current
+TCS,Tata Consultancy Services,Equity,Technology,India,450000,3624,4148,1866600000,6.8,Core,NIFTY 50,Current
+HDFCBANK,HDFC Bank,Equity,Financials,India,900000,1580,1684,1515600000,5.5,Core,NIFTY 50,Current
+INFY,Infosys Ltd.,Equity,Technology,India,600000,1462,1842,1105200000,4.0,Satellite,NIFTY 50,Current
+SPY,SPDR S&P 500 ETF,ETF,Diversified,US,120000,470.40,552.80,66336000,17.3,Core,S&P 500,Current
+ZOMATO,Zomato Ltd.,Equity,Consumer Discretionary,India,1500000,80.00,142.00,213000000,0.8,Satellite,NIFTY 50,Watchlist
+PAYTM,One97 Communications,Equity,Financials,India,300000,520.00,420.00,126000000,0.5,Satellite,NIFTY 50,Exited
 `;
 
 // Used by the UI to render a clean "what your file should look like" preview.
@@ -472,10 +475,10 @@ export const SAMPLE_PREVIEW_ROWS: Array<Record<string, string>> = [
     assetClass: "Equity",
     sector: "Technology",
     geography: "US",
-    quantity: "500",
+    quantity: "150000",
     averageCost: "148.20",
     currentPrice: "218.60",
-    marketValue: "109300",
+    marketValue: "32790000",
     portfolioWeight: "8.5",
     coreSatellite: "Core",
     benchmark: "S&P 500",
@@ -487,10 +490,10 @@ export const SAMPLE_PREVIEW_ROWS: Array<Record<string, string>> = [
     assetClass: "Equity",
     sector: "Energy",
     geography: "India",
-    quantity: "2500",
+    quantity: "750000",
     averageCost: "2380",
     currentPrice: "2912",
-    marketValue: "7280000",
+    marketValue: "2184000000",
     portfolioWeight: "8.0",
     coreSatellite: "Core",
     benchmark: "NIFTY 50",
@@ -502,10 +505,10 @@ export const SAMPLE_PREVIEW_ROWS: Array<Record<string, string>> = [
     assetClass: "Equity",
     sector: "Financials",
     geography: "India",
-    quantity: "1000",
+    quantity: "300000",
     averageCost: "520.00",
     currentPrice: "420.00",
-    marketValue: "420000",
+    marketValue: "126000000",
     portfolioWeight: "0.5",
     coreSatellite: "Satellite",
     benchmark: "NIFTY 50",
