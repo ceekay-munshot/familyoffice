@@ -22,6 +22,15 @@ function Gate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Root + unknown-path landing. Sends users straight to the Morning CIO
+// Dashboard once they've uploaded a portfolio; otherwise routes them to
+// the upload screen so the very-first-visit experience still starts at
+// onboarding.
+function RootRedirect() {
+  const { portfolio } = usePortfolio();
+  return <Navigate to={portfolio ? "/cio" : "/upload"} replace />;
+}
+
 export default function App() {
   return (
     <div className="flex h-screen bg-ink-950 text-slate-200 bg-grid">
@@ -31,7 +40,7 @@ export default function App() {
         <DashboardHeader />
         <main className="flex-1 overflow-y-auto px-6 py-6">
           <Routes>
-            <Route path="/" element={<Navigate to="/upload" replace />} />
+            <Route path="/" element={<RootRedirect />} />
             <Route path="/upload" element={<UploadPortfolio />} />
             <Route path="/cio" element={<Gate><MorningCIO /></Gate>} />
             <Route path="/monitor" element={<Gate><PortfolioMonitor /></Gate>} />
@@ -43,7 +52,7 @@ export default function App() {
             <Route path="/recommendations" element={<Gate><Recommendations /></Gate>} />
             <Route path="/history" element={<UploadHistory />} />
             <Route path="/sources" element={<Gate><SourcesEvidence /></Gate>} />
-            <Route path="*" element={<Navigate to="/upload" replace />} />
+            <Route path="*" element={<RootRedirect />} />
           </Routes>
         </main>
       </div>
