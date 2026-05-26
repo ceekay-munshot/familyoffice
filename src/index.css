@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* premium scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.3);
+}
+
+/* subtle grid background */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-slate-800 bg-ink-800 shadow-card;
+  }
+  .card-pad {
+    @apply card p-5;
+  }
+  .label-xs {
+    @apply text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500;
+  }
+  .h-section {
+    @apply text-sm font-semibold text-slate-200;
+  }
+  .divider {
+    @apply border-t border-slate-800;
+  }
+  .ring-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-gold-500/40;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium ring-focus transition-colors;
+  }
+  .btn-primary {
+    @apply btn bg-gold-500 text-ink-950 hover:bg-gold-400;
+  }
+  .btn-ghost {
+    @apply btn border border-slate-700 bg-transparent text-slate-200 hover:bg-slate-800/60;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-800/60 px-2 py-0.5 text-[11px] font-medium text-slate-300;
+  }
+}
+
+/* light mode tokens (class-based) */
+html:not(.dark) body {
+  background: #f6f7fb;
+  color: #0f172a;
+}
+html:not(.dark) .card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  color: #0f172a;
+}

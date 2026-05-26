@@ -1,0 +1,118 @@
+import type { SourceDoc } from "@/types";
+
+const isoDaysAgo = (d: number) => {
+  const dt = new Date();
+  dt.setDate(dt.getDate() - d);
+  return dt.toISOString();
+};
+
+export const MOCK_SOURCES: SourceDoc[] = [
+  {
+    id: "br1",
+    name: "Morgan Stanley — NVIDIA: Blackwell ramp ahead of plan",
+    type: "Broker Report",
+    date: isoDaysAgo(0),
+    summary: "Raise PT to $1,280. Supply checks across H200/B100 indicate Q3 deliveries 8–10% above prior model.",
+    relatedTickers: ["NVDA"],
+    relatedSectors: ["Technology"],
+  },
+  {
+    id: "br2",
+    name: "Goldman Sachs — Managed Care: Recalibrating UNH risk premium",
+    type: "Broker Report",
+    date: isoDaysAgo(1),
+    summary: "Downgrade UNH to Neutral; PT $540. Regulatory probe + MLR creep.",
+    relatedTickers: ["UNH"],
+    relatedSectors: ["Healthcare"],
+  },
+  {
+    id: "br3",
+    name: "Jefferies — Indian Banks: Margin trajectory bottoming",
+    type: "Broker Report",
+    date: isoDaysAgo(2),
+    summary: "Prefer HDFCB; cautious on BAF on unsecured stress.",
+    relatedTickers: ["HDFCBANK", "BAJFINANCE"],
+    relatedSectors: ["Financials"],
+  },
+  {
+    id: "br6",
+    name: "JPMorgan — Eli Lilly: Zepbound capacity update bullish",
+    type: "Broker Report",
+    date: isoDaysAgo(4),
+    summary: "PT $960. Capacity expansion 14 months ahead of plan.",
+    relatedTickers: ["LLY"],
+    relatedSectors: ["Healthcare"],
+  },
+  {
+    id: "br9",
+    name: "Macquarie — Bajaj Finance: Asset quality reset",
+    type: "Broker Report",
+    date: isoDaysAgo(7),
+    summary: "Cut to Underperform; PT ₹6,600.",
+    relatedTickers: ["BAJFINANCE"],
+    relatedSectors: ["Financials"],
+  },
+  {
+    id: "n1",
+    name: "Bloomberg — NVIDIA tops earnings, raises Q3 guidance",
+    type: "News",
+    date: isoDaysAgo(0),
+    summary: "Data-center revenue +154% YoY; hyperscaler capex guides higher.",
+    relatedTickers: ["NVDA", "MSFT", "GOOGL", "META"],
+    relatedSectors: ["Technology", "Communication Services"],
+  },
+  {
+    id: "n2",
+    name: "Reuters — UnitedHealth slides as DOJ probe widens",
+    type: "News",
+    date: isoDaysAgo(1),
+    summary: "Analysts cut FY26 EPS 6–8%; risk premium expands.",
+    relatedTickers: ["UNH"],
+    relatedSectors: ["Healthcare"],
+  },
+  {
+    id: "n8",
+    name: "FT — Eli Lilly Zepbound supply expands",
+    type: "News",
+    date: isoDaysAgo(5),
+    summary: "Compounding pharmacy headwind fades; access expands through PBMs.",
+    relatedTickers: ["LLY"],
+    relatedSectors: ["Healthcare"],
+  },
+  {
+    id: "n11",
+    name: "BloombergQuint — Bajaj Finance asset-quality watch",
+    type: "News",
+    date: isoDaysAgo(7),
+    summary: "Unsecured book under scrutiny; street trims FY27 EPS 4%.",
+    relatedTickers: ["BAJFINANCE"],
+    relatedSectors: ["Financials"],
+  },
+  {
+    id: "m1",
+    name: "Macro Outlook — Fed cut path",
+    type: "Macro",
+    date: isoDaysAgo(2),
+    summary: "Two-cut path priced for current cycle; DXY skew suggests INR upside risk.",
+    relatedTickers: [],
+    relatedSectors: [],
+  },
+  {
+    id: "m2",
+    name: "RBI MPC Minutes — Stance unchanged",
+    type: "Regulatory",
+    date: isoDaysAgo(1),
+    summary: "Repo at 6.50%; tone data-dependent; CRR debate noted.",
+    relatedTickers: ["HDFCBANK"],
+    relatedSectors: ["Financials"],
+  },
+  {
+    id: "m3",
+    name: "Internal Memo — Q4 IC discussion",
+    type: "Internal Memo",
+    date: isoDaysAgo(10),
+    summary: "Core/satellite drift review; staples sleeve below target by 200 bps; healthcare sleeve overweight on UNH risk.",
+    relatedTickers: [],
+    relatedSectors: ["Consumer Staples", "Healthcare"],
+  },
+];
