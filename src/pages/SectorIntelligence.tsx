@@ -8,26 +8,29 @@ import { fmtDate, relativeTime } from "@/lib/format";
 import { MOCK_NEWS } from "@/data/mockNews";
 
 const SECTOR_PULSE = [
-  { sector: "Technology", sentiment: 78, momentum: "accelerating", note: "AI capex cycle absorbing supply; mega-cap concentration risk persists." },
-  { sector: "Financials", sentiment: 52, momentum: "stabilizing", note: "NIM trough behind us in US; India private banks margin recovery in motion." },
-  { sector: "Healthcare", sentiment: 34, momentum: "deteriorating", note: "Managed-care regulatory overhang; GLP-1 winners decoupling from sector." },
-  { sector: "Consumer Discretionary", sentiment: 58, momentum: "mixed", note: "Premium consumer resilient; mid-market spending softer." },
-  { sector: "Consumer Staples", sentiment: 62, momentum: "stabilizing", note: "Pricing power normalizing; volumes recovering." },
-  { sector: "Energy", sentiment: 55, momentum: "supportive", note: "OPEC+ discipline supportive; demand growth tracking +1.1mb/d." },
-  { sector: "Communication Services", sentiment: 70, momentum: "accelerating", note: "Ad inventory pricing firm; AI monetization narrative intact." },
+  { sector: "Technology", sentiment: 48, momentum: "mixed", note: "Discretionary cycle bottoming; BFSI commentary mixed; Gen-AI revenue conversion still 12–18 months out." },
+  { sector: "Financials", sentiment: 58, momentum: "stabilizing", note: "Private bank NIM trough behind us; PSU consolidation supports private-share gain; BAF asset-quality reset is the watch item." },
+  { sector: "Healthcare", sentiment: 66, momentum: "accelerating", note: "Specialty pipelines re-rating Indian pharma; domestic generics gaining share post-Lupin recall." },
+  { sector: "Consumer Discretionary", sentiment: 60, momentum: "mixed", note: "Premium urban resilient; rural demand softening into monsoon; auto discounting easing." },
+  { sector: "Consumer Staples", sentiment: 62, momentum: "stabilizing", note: "Volumes recovering; pricing discipline maintained; quick-commerce headwind cooling for organized retail." },
+  { sector: "Energy", sentiment: 70, momentum: "supportive", note: "Reliance Jio + retail re-rating intact; refining cracks bottoming into H2FY27." },
+  { sector: "Communication Services", sentiment: 76, momentum: "accelerating", note: "Tariff hike absorbed without churn; ARPU at ₹212 confirms pricing power." },
+  { sector: "Industrials", sentiment: 74, momentum: "accelerating", note: "L&T order book at all-time high; defence + hi-tech mfg now 18% of book; execution cycle to follow." },
 ];
 
 const COMPETITOR_MOVES = [
-  { sector: "Technology", title: "AMD MI400 launch slips into mid-2027", impact: "NVDA competitive moat extends another 6–9 months.", affects: ["NVDA"] },
-  { sector: "Healthcare", title: "Novo Nordisk orforglipron Phase 3 readout in Q3", impact: "Potential LLY pressure if oral GLP-1 data is competitive.", affects: ["LLY"] },
-  { sector: "Financials", title: "Capital One ↑ ICICI bid; consolidation chatter", impact: "Multiple re-rating possible across US regional banks; less impact on JPM/HDFCB.", affects: ["JPM", "HDFCBANK"] },
-  { sector: "Energy", title: "Shell pares LNG capex; integrated supply discipline", impact: "XOM, Reliance refining-petchem complex relatively better positioned.", affects: ["XOM", "RELIANCE"] },
+  { sector: "Financials", title: "ICICI Bank retail credit growth re-accelerating post-festive", impact: "ICICI closing gap to HDFCB on retail; BAF unsecured book under pressure.", affects: ["ICICIBANK", "HDFCBANK", "BAJFINANCE"] },
+  { sector: "Communication Services", title: "Reliance Jio matches Airtel ARPU narrative — 5G monetization race", impact: "Tariff cycle has legs for both; Vi-led churn capture continues.", affects: ["BHARTIARTL", "RELIANCE"] },
+  { sector: "Technology", title: "Infosys margin lever vs TCS volume lever — diverging Q4 prints", impact: "INFY preferred on growth optionality; TCS BSNL ramp slip pushes FY26 to lower-end of guide.", affects: ["TCS", "INFY"] },
+  { sector: "Consumer Discretionary", title: "Tata Motors EV market-share lead narrows as Maruti e-Vitara launches", impact: "EV inflection priced into MARUTI; hybrid mix supports gross margin near-term.", affects: ["MARUTI"] },
+  { sector: "Healthcare", title: "Lupin recall flow-through benefits Sun Pharma domestic generics share", impact: "SUNPHARMA gains 80–120 bps domestic IPM share; Cipla also positioned.", affects: ["SUNPHARMA"] },
 ];
 
 const REGULATORY = [
-  { date: "1d ago", body: "DOJ widens UNH inquiry to Optum care-delivery practices.", tickers: ["UNH"] },
-  { date: "2d ago", body: "RBI MPC holds repo at 6.50%; CRR debate noted in minutes.", tickers: ["HDFCBANK", "BAJFINANCE"] },
-  { date: "5d ago", body: "EU Digital Markets Act — Apple App Store remedies under scope.", tickers: ["AAPL"] },
+  { date: "1d ago", body: "RBI MPC holds repo at 6.50%; dovish undertone — three members flag softer Q4 CPI as cut trigger.", tickers: ["HDFCBANK", "ICICIBANK", "BAJFINANCE"] },
+  { date: "3d ago", body: "SEBI's investigation into Adani-Hindenburg saga closes with limited findings; market structure overhang lifts.", tickers: ["RELIANCE", "LT"] },
+  { date: "6d ago", body: "NSE IPO timeline pushed to FY27 — SEBI approval still pending; pre-IPO discount widens to 12%.", tickers: ["NSE"] },
+  { date: "8d ago", body: "USFDA Halol facility re-inspection scheduled Q2FY27 — outcome watch item for Sun Pharma.", tickers: ["SUNPHARMA"] },
 ];
 
 export function SectorIntelligence() {

@@ -449,44 +449,37 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
 // Sample CSV. Surfaced both as an in-app preview and as a download.
 // ---------------------------------------------------------------------------
 
-// Quantities are scaled 300× vs. realistic individual holdings so the
-// demo NAV reads like a working family office portfolio (~₹2.4k Cr)
-// rather than a personal brokerage account.
+// All-Indian sample portfolio (listed equities, ETF, plus four unlisted
+// private holdings). Quantities are pre-scaled to family-office size so
+// the demo NAV lands at ~₹17,000 Cr (~$2 B). Prices are illustrative.
 export const SAMPLE_CSV = `ticker,companyName,assetClass,sector,geography,quantity,averageCost,currentPrice,marketValue,portfolioWeight,coreSatellite,benchmark,status
-AAPL,Apple Inc.,Equity,Technology,US,150000,148.20,218.60,32790000,8.5,Core,S&P 500,Current
-MSFT,Microsoft Corp.,Equity,Technology,US,120000,305.50,421.30,50556000,13.2,Core,S&P 500,Current
-NVDA,NVIDIA Corp.,Equity,Technology,US,60000,412.60,1124.20,67452000,17.6,Satellite,S&P 500,Current
-JPM,JPMorgan Chase,Equity,Financials,US,90000,158.70,218.40,19656000,5.1,Core,S&P 500,Current
-LLY,Eli Lilly & Co.,Equity,Healthcare,US,24000,718.00,824.50,19788000,5.2,Satellite,S&P 500,Current
-RELIANCE,Reliance Industries,Equity,Energy,India,750000,2380,2912,2184000000,8.0,Core,NIFTY 50,Current
-TCS,Tata Consultancy Services,Equity,Technology,India,450000,3624,4148,1866600000,6.8,Core,NIFTY 50,Current
-HDFCBANK,HDFC Bank,Equity,Financials,India,900000,1580,1684,1515600000,5.5,Core,NIFTY 50,Current
-INFY,Infosys Ltd.,Equity,Technology,India,600000,1462,1842,1105200000,4.0,Satellite,NIFTY 50,Current
-SPY,SPDR S&P 500 ETF,ETF,Diversified,US,120000,470.40,552.80,66336000,17.3,Core,S&P 500,Current
-ZOMATO,Zomato Ltd.,Equity,Consumer Discretionary,India,1500000,80.00,142.00,213000000,0.8,Satellite,NIFTY 50,Watchlist
-PAYTM,One97 Communications,Equity,Financials,India,300000,520.00,420.00,126000000,0.5,Satellite,NIFTY 50,Exited
+RELIANCE,Reliance Industries Ltd.,Equity,Energy,India,750000,2380,2912,2184000000,12.5,Core,NIFTY 50,Current
+TCS,Tata Consultancy Services,Equity,Technology,India,450000,3624,4148,1866600000,10.7,Core,NIFTY 50,Current
+HDFCBANK,HDFC Bank Ltd.,Equity,Financials,India,900000,1580,1684,1515600000,8.7,Core,NIFTY 50,Current
+INFY,Infosys Ltd.,Equity,Technology,India,600000,1462,1842,1105200000,6.3,Core,NIFTY 50,Current
+ICICIBANK,ICICI Bank Ltd.,Equity,Financials,India,800000,980,1124,899200000,5.2,Core,NIFTY 50,Current
+ITC,ITC Ltd.,Equity,Consumer Staples,India,1200000,412,468,561600000,3.2,Core,NIFTY 50,Current
+BHARTIARTL,Bharti Airtel Ltd.,Equity,Communication Services,India,500000,1042,1612,806000000,4.6,Core,NIFTY 50,Current
+HINDUNILVR,Hindustan Unilever Ltd.,Equity,Consumer Staples,India,280000,2680,2456,687680000,4.0,Core,NIFTY 50,Current
+LT,Larsen & Toubro Ltd.,Equity,Industrials,India,200000,3140,3582,716400000,4.1,Core,NIFTY 50,Current
+TITAN,Titan Company Ltd.,Equity,Consumer Discretionary,India,220000,3120,3624,797280000,4.6,Satellite,NIFTY 50,Current
+MARUTI,Maruti Suzuki India Ltd.,Equity,Consumer Discretionary,India,80000,9800,11250,900000000,5.2,Satellite,NIFTY 50,Current
+SUNPHARMA,Sun Pharmaceutical Industries,Equity,Healthcare,India,280000,1420,1718,481040000,2.8,Satellite,NIFTY 50,Current
+NIFTYBEES,Nippon India Nifty BeES,ETF,Diversified,India,4000000,218,256,1024000000,5.9,Core,NIFTY 50,Current
+ADANIENT,Adani Enterprises Ltd.,Equity,Industrials,India,60000,2240,2780,166800000,1.0,Satellite,NIFTY 50,Watchlist
+ASIANPAINT,Asian Paints Ltd.,Equity,Materials,India,180000,2820,2412,434160000,2.5,Satellite,NIFTY 50,Watchlist
+BAJFINANCE,Bajaj Finance Ltd.,Equity,Financials,India,90000,6850,7280,655200000,0,Satellite,NIFTY 50,Exited
+RAZORPAY,Razorpay Software Pvt. Ltd.,Alternative,Financials,India,500000,1800,2200,1100000000,6.3,Satellite,Private Markets,Current
+ZERODHA,Zerodha Broking Pvt. Ltd.,Alternative,Financials,India,80000,12000,15000,1200000000,6.9,Satellite,Private Markets,Current
+LENSKART,Lenskart Solutions Pvt. Ltd.,Alternative,Consumer Discretionary,India,300000,1500,1800,540000000,3.1,Satellite,Private Markets,Current
+DREAMSPORTS,Sporta Technologies (Dream11),Alternative,Communication Services,India,120000,3000,3500,420000000,2.4,Satellite,Private Markets,Current
 `;
 
 // Used by the UI to render a clean "what your file should look like" preview.
 export const SAMPLE_PREVIEW_ROWS: Array<Record<string, string>> = [
   {
-    ticker: "AAPL",
-    companyName: "Apple Inc.",
-    assetClass: "Equity",
-    sector: "Technology",
-    geography: "US",
-    quantity: "150000",
-    averageCost: "148.20",
-    currentPrice: "218.60",
-    marketValue: "32790000",
-    portfolioWeight: "8.5",
-    coreSatellite: "Core",
-    benchmark: "S&P 500",
-    status: "Current",
-  },
-  {
     ticker: "RELIANCE",
-    companyName: "Reliance Industries",
+    companyName: "Reliance Industries Ltd.",
     assetClass: "Equity",
     sector: "Energy",
     geography: "India",
@@ -494,22 +487,37 @@ export const SAMPLE_PREVIEW_ROWS: Array<Record<string, string>> = [
     averageCost: "2380",
     currentPrice: "2912",
     marketValue: "2184000000",
-    portfolioWeight: "8.0",
+    portfolioWeight: "12.5",
     coreSatellite: "Core",
     benchmark: "NIFTY 50",
     status: "Current",
   },
   {
-    ticker: "PAYTM",
-    companyName: "One97 Communications",
+    ticker: "RAZORPAY",
+    companyName: "Razorpay Software Pvt. Ltd.",
+    assetClass: "Alternative",
+    sector: "Financials",
+    geography: "India",
+    quantity: "500000",
+    averageCost: "1800",
+    currentPrice: "2200",
+    marketValue: "1100000000",
+    portfolioWeight: "6.3",
+    coreSatellite: "Satellite",
+    benchmark: "Private Markets",
+    status: "Current",
+  },
+  {
+    ticker: "BAJFINANCE",
+    companyName: "Bajaj Finance Ltd.",
     assetClass: "Equity",
     sector: "Financials",
     geography: "India",
-    quantity: "300000",
-    averageCost: "520.00",
-    currentPrice: "420.00",
-    marketValue: "126000000",
-    portfolioWeight: "0.5",
+    quantity: "90000",
+    averageCost: "6850",
+    currentPrice: "7280",
+    marketValue: "655200000",
+    portfolioWeight: "0",
     coreSatellite: "Satellite",
     benchmark: "NIFTY 50",
     status: "Exited",
