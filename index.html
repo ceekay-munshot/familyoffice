@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e1a'/%3E%3Cpath d='M8 22V10h3l5 8 5-8h3v12h-3v-6.5l-4 6.5h-2l-4-6.5V22z' fill='%23d4af37'/%3E%3C/svg%3E" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23efe6d2'/%3E%3Cpath d='M8 22V10h3l5 8 5-8h3v12h-3v-6.5l-4 6.5h-2l-4-6.5V22z' fill='%23b08f25'/%3E%3C/svg%3E" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0a0e1a" />
+    <meta name="theme-color" content="#efe6d2" />
     <title>Family Office OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,6 +12,15 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Avoid a light→dark flash on reload for users who explicitly chose
+      // dark mode previously. Default (no stored preference) stays light.
+      try {
+        if (localStorage.getItem("fo:theme") === "dark") {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (_) { /* localStorage unavailable */ }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -3,14 +3,33 @@ import { useEffect, useState } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { fmtDateTime } from "@/lib/format";
 
+const THEME_KEY = "fo:theme";
+
+function readInitialTheme(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(THEME_KEY) === "dark";
+  } catch {
+    return false;
+  }
+}
+
 export function TopBar() {
   const { portfolio } = usePortfolio();
-  const [isDark, setIsDark] = useState(true);
+  // Default to light; honor a persisted preference if the user previously
+  // toggled to dark. The inline boot script in index.html applies the class
+  // before React mounts so there's no flash either way.
+  const [isDark, setIsDark] = useState<boolean>(readInitialTheme);
 
   useEffect(() => {
     const html = document.documentElement;
     if (isDark) html.classList.add("dark");
     else html.classList.remove("dark");
+    try {
+      window.localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+    } catch {
+      /* localStorage unavailable — non-fatal */
+    }
   }, [isDark]);
 
   return (
