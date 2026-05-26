@@ -11,21 +11,36 @@ const LOCALE_BY_CURRENCY: Record<string, string> = {
   GBP: "en-GB",
 };
 
+// ISO 4217 currency codes we'll happily hand to Intl.NumberFormat. Anything
+// else (including the legacy "Mixed" sentinel that lived in older portfolio
+// snapshots) falls back to INR — our default — so a stale localStorage
+// entry never blanks the page with a RangeError.
+const VALID_CURRENCY_CODES = new Set([
+  "USD", "INR", "EUR", "GBP", "JPY", "HKD", "SGD", "CAD", "AUD", "CNY",
+]);
+
 export function fmtCurrency(
   n: number,
-  code: string = "USD",
+  code: string = "INR",
   opts?: { compact?: boolean; sign?: boolean },
 ): string {
-  const locale = LOCALE_BY_CURRENCY[code] ?? "en-US";
+  const effective = VALID_CURRENCY_CODES.has(code) ? code : "INR";
+  const locale = LOCALE_BY_CURRENCY[effective] ?? "en-IN";
   const sign = opts?.sign && n > 0 ? "+" : "";
-  const formatted = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: code,
-    notation: opts?.compact ? "compact" : "standard",
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 0,
-  }).format(n);
-  return sign + formatted;
+  try {
+    const formatted = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: effective,
+      notation: opts?.compact ? "compact" : "standard",
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+    }).format(n);
+    return sign + formatted;
+  } catch {
+    // Last-ditch fallback for any Intl edge case (older browsers, exotic
+    // locales). Never throw out of a formatter — that's how UIs go dark.
+    return `${sign}${effective} ${n.toLocaleString(locale, { maximumFractionDigits: 2 })}`;
+  }
 }
 
 // Legacy alias — many components still call fmtUSD; route it through fmtCurrency.

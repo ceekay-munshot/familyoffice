@@ -40,8 +40,22 @@ function safeRemove(key: string): void {
   }
 }
 
+// Portfolios may have been persisted by an older build of the app with a
+// baseCurrency outside the current type's union (e.g. "Mixed"). Normalize
+// on read so downstream Intl.NumberFormat calls never receive an invalid
+// currency code. This is intentionally forgiving — we'd rather show INR
+// than blank the dashboard.
+function migratePortfolio(pf: Portfolio | null): Portfolio | null {
+  if (!pf) return null;
+  const allowed = new Set(["USD", "INR", "EUR", "GBP"]);
+  if (!allowed.has(pf.baseCurrency as unknown as string)) {
+    return { ...pf, baseCurrency: "INR" };
+  }
+  return pf;
+}
+
 export function readActivePortfolio(): Portfolio | null {
-  return safeRead<Portfolio>(STORAGE_KEYS.ACTIVE_PORTFOLIO);
+  return migratePortfolio(safeRead<Portfolio>(STORAGE_KEYS.ACTIVE_PORTFOLIO));
 }
 
 export function writeActivePortfolio(pf: Portfolio): void {
@@ -49,7 +63,7 @@ export function writeActivePortfolio(pf: Portfolio): void {
 }
 
 export function readPriorPortfolio(): Portfolio | null {
-  return safeRead<Portfolio>(STORAGE_KEYS.PRIOR_PORTFOLIO);
+  return migratePortfolio(safeRead<Portfolio>(STORAGE_KEYS.PRIOR_PORTFOLIO));
 }
 
 export function writePriorPortfolio(pf: Portfolio): void {
