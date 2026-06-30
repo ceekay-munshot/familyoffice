@@ -2,7 +2,8 @@
 // else in the app has to remember the exact key names — and changing the
 // schema is one find-and-replace.
 
-import type { Portfolio, UploadEvent } from "./portfolioTypes";
+import type { Portfolio, UploadEvent, Vehicle, ManagerType } from "./portfolioTypes";
+import { MANAGER_VEHICLES } from "./portfolioTypes";
 
 export const STORAGE_KEYS = {
   ACTIVE_PORTFOLIO: "fo:portfolio:active",
@@ -48,10 +49,43 @@ function safeRemove(key: string): void {
 function migratePortfolio(pf: Portfolio | null): Portfolio | null {
   if (!pf) return null;
   const allowed = new Set(["USD", "INR", "EUR", "GBP"]);
+  let next = pf;
   if (!allowed.has(pf.baseCurrency as unknown as string)) {
-    return { ...pf, baseCurrency: "INR" };
+    next = { ...pf, baseCurrency: "INR" };
   }
-  return pf;
+  // Back-fill the multi-vehicle dimensions for snapshots persisted before they
+  // existed, so the consolidated / manager / family views never see undefined.
+  const needsVehicleBackfill = next.holdings.some((h) => !h.vehicle);
+  if (needsVehicleBackfill) {
+    next = {
+      ...next,
+      holdings: next.holdings.map((h) => {
+        if (h.vehicle) return h;
+        const vehicle = inferVehicleFromLegacy(h);
+        const managerType: ManagerType = MANAGER_VEHICLES.includes(vehicle) ? "Advisor" : "In-house";
+        return {
+          ...h,
+          vehicle,
+          manager: h.manager ?? (managerType === "In-house" ? "In-house (Direct)" : "Unassigned Advisor"),
+          managerType: h.managerType ?? managerType,
+          familyMember: h.familyMember ?? "Glow Ventures LLP",
+        };
+      }),
+    };
+  }
+  return next;
+}
+
+// Best-effort vehicle inference for legacy holdings (no vehicle column was
+// ever stored). Mirrors the parser's inference using benchmark/asset-class.
+function inferVehicleFromLegacy(h: Portfolio["holdings"][number]): Vehicle {
+  const b = (h.benchmark || "").toLowerCase();
+  if (b.includes("private")) return "Private";
+  if (h.assetClass === "Real Estate") return "Real Estate";
+  if (h.assetClass === "Bond") return "Fixed Income";
+  if (h.assetClass === "Commodity") return "Gold";
+  if (h.assetClass === "Alternative") return "Private";
+  return "Direct Equity";
 }
 
 export function readActivePortfolio(): Portfolio | null {

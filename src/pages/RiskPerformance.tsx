@@ -74,7 +74,7 @@ export function RiskPerformance() {
         eyebrow="Analytics"
         title="Risk & Performance"
         subtitle="Quant signature of the book. Time-series shown is illustrative until a price feed is connected."
-        right={<Pill tone="info">Benchmark: NIFTY 50</Pill>}
+        right={<Pill tone="info">Benchmark: NIFTY 500</Pill>}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

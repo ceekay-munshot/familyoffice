@@ -21,17 +21,19 @@ import { Card } from "@/components/Card";
 import { StatTile } from "@/components/StatTile";
 import { Pill } from "@/components/Pill";
 import { activeHoldings, usePortfolio } from "@/context/PortfolioContext";
-import { fmtCurrency, fmtPct, changeColor, relativeTime } from "@/lib/format";
+import { fmtPct, changeColor, relativeTime } from "@/lib/format";
+import { bucketBy, vehicleOf } from "@/lib/portfolioAnalytics";
 import { buildBenchmarkSeries } from "@/data/mockBenchmark";
 import { MOCK_NEWS } from "@/data/mockNews";
 import { chartTooltipStyle, chartTooltipLabelStyle, chartTooltipItemStyle } from "@/lib/chartTheme";
 import { MOCK_RECOMMENDATIONS } from "@/data/mockRecommendations";
 
 export function MorningCIO() {
-  const { portfolio } = usePortfolio();
+  const { portfolio, fmtFromBase } = usePortfolio();
   if (!portfolio) return null;
 
   const holdings = activeHoldings(portfolio);
+  const byVehicle = bucketBy(holdings, vehicleOf);
   const totalValue = portfolio.totalValue;
   // Sum in base currency so mixed-currency portfolios produce a coherent
   // P&L and cost basis. Fall back to native fields if older holdings
@@ -77,15 +79,15 @@ export function MorningCIO() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           label="Portfolio NAV"
-          value={fmtCurrency(totalValue, portfolio.baseCurrency, { compact: true })}
+          value={fmtFromBase(totalValue, { compact: true })}
           sub={`${holdings.length} active holdings`}
           icon={<Briefcase className="h-4 w-4" />}
         />
         <StatTile
           label="Unrealized P&L"
-          value={fmtCurrency(totalPnL, portfolio.baseCurrency, { compact: true, sign: true })}
+          value={fmtFromBase(totalPnL, { compact: true, sign: true })}
           delta={totalReturnPct}
-          sub={`Cost basis ${fmtCurrency(totalCost, portfolio.baseCurrency, { compact: true })}`}
+          sub={`Cost basis ${fmtFromBase(totalCost, { compact: true })}`}
           icon={<Activity className="h-4 w-4" />}
         />
         <StatTile
@@ -152,11 +154,7 @@ export function MorningCIO() {
                     {fmtPct(h.returnPct, { sign: true })}
                   </div>
                   <div className={`mono text-[11px] ${changeColor(h.unrealizedPnL)}`}>
-                    {fmtCurrency(
-                      h.unrealizedPnLBase ?? h.unrealizedPnL,
-                      portfolio.baseCurrency,
-                      { compact: true, sign: true },
-                    )}
+                    {fmtFromBase(h.unrealizedPnLBase ?? h.unrealizedPnL, { compact: true, sign: true })}
                   </div>
                 </div>
               </li>
@@ -261,6 +259,49 @@ export function MorningCIO() {
                   </div>
                 </li>
               ))}
+          </ul>
+        </Card>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+        <Card
+          className="lg:col-span-2"
+          title="Consolidated by vehicle"
+          subtitle={`Direct equity, mutual funds, PMS, AIFs & private — ${byVehicle.filter((b) => ["Mutual Fund", "PMS", "AIF"].includes(b.key)).reduce((s, b) => s + b.count, 0)} positions via managers`}
+          right={<Link to="/look-through" className="text-xs text-gold-400 hover:underline">Look-through →</Link>}
+        >
+          <ul className="space-y-2">
+            {byVehicle.map((b) => (
+              <li key={b.key} className="flex items-center gap-3">
+                <span className="w-32 shrink-0 text-sm text-slate-300">{b.key}</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-800">
+                  <div className="h-full bg-gold-500/70" style={{ width: `${Math.max(2, b.weight * 100)}%` }} />
+                </div>
+                <span className="w-20 shrink-0 text-right mono text-sm text-slate-100">{fmtFromBase(b.mv, { compact: true })}</span>
+                <span className="w-12 shrink-0 text-right mono text-[11px] text-slate-500">{(b.weight * 100).toFixed(0)}%</span>
+                <span className={`w-14 shrink-0 text-right mono text-[11px] ${changeColor(b.returnPct)}`}>{fmtPct(b.returnPct, { sign: true })}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        <Card title="Jump to">
+          <ul className="space-y-2 text-sm">
+            {[
+              { to: "/ask", label: "Ask Munshot — chat with your book" },
+              { to: "/look-through", label: "Look-Through & Overlap" },
+              { to: "/family", label: "Family & Entities" },
+              { to: "/funds", label: "Fund & Scheme Analytics" },
+              { to: "/liquidity", label: "Liquidity & Capital Calls" },
+              { to: "/corporate-actions", label: "Corporate Actions" },
+            ].map((l) => (
+              <li key={l.to}>
+                <Link to={l.to} className="flex items-center gap-2 rounded-md border border-slate-800 bg-ink-700/40 px-3 py-2 text-slate-300 transition-colors hover:border-gold-400/40 hover:text-slate-100 active:scale-[0.99]">
+                  <ArrowUpRight className="h-3.5 w-3.5 text-gold-400" />
+                  {l.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </Card>
       </div>

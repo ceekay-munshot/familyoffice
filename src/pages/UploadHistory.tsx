@@ -91,7 +91,7 @@ export function UploadHistory() {
                   <div className="hidden shrink-0 lg:block">
                     <div className="label-xs text-right">Total</div>
                     <div className="mono text-right text-sm text-slate-100">
-                      {fmtCurrency(u.totalPortfolioValue, "USD", { compact: true })}
+                      {fmtCurrency(u.totalPortfolioValue, portfolio?.baseCurrency ?? "INR", { compact: true })}
                     </div>
                   </div>
                 </button>

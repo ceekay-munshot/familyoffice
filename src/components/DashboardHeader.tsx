@@ -15,11 +15,45 @@ import {
   Database,
 } from "lucide-react";
 import { usePortfolio, activeHoldings, distinctSectors, holdingsByCoreSatellite } from "@/context/PortfolioContext";
-import { fmtCurrency, fmtDateTime } from "@/lib/format";
+import { fmtDateTime } from "@/lib/format";
+import { SUPPORTED_DISPLAY_CURRENCIES, type DisplayCurrency } from "@/lib/fx";
+
+// Compact INR/USD/EUR/GBP segmented control. Drives the global display currency;
+// every aggregate in the app re-denominates live (the family asked for "INR…
+// dollar… all of that").
+function CurrencySwitch() {
+  const { displayCurrency, setDisplayCurrency } = usePortfolio();
+  return (
+    <div
+      className="inline-flex items-center gap-0.5 rounded-md border border-slate-700 bg-ink-800/60 p-0.5"
+      role="group"
+      aria-label="Display currency"
+    >
+      {SUPPORTED_DISPLAY_CURRENCIES.map((c: DisplayCurrency) => {
+        const active = displayCurrency === c;
+        return (
+          <button
+            key={c}
+            onClick={() => setDisplayCurrency(c)}
+            aria-pressed={active}
+            className={[
+              "rounded px-2 py-0.5 text-[11px] font-medium tabular transition-colors active:scale-[0.97]",
+              active
+                ? "bg-gold-500 text-ink-950 shadow-glow"
+                : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200",
+            ].join(" ")}
+          >
+            {c}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function DashboardHeader() {
   const navigate = useNavigate();
-  const { portfolio, clearPortfolio } = usePortfolio();
+  const { portfolio, clearPortfolio, fmtFromBase, displayCurrency } = usePortfolio();
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Pre-upload variant: thin teaser strip that tells the user what's missing.
@@ -65,9 +99,11 @@ export function DashboardHeader() {
     portfolio.holdings.map((h) => h.currency).filter(Boolean) as string[],
   );
   const totalValueSub =
-    distinctCurrencies.size > 1
-      ? `FX-adjusted to ${portfolio.baseCurrency}`
-      : `In ${portfolio.baseCurrency}`;
+    displayCurrency !== portfolio.baseCurrency
+      ? `Converted to ${displayCurrency}`
+      : distinctCurrencies.size > 1
+        ? `FX-adjusted to ${portfolio.baseCurrency}`
+        : `In ${portfolio.baseCurrency}`;
 
   return (
     <>
@@ -92,6 +128,7 @@ export function DashboardHeader() {
           </div>
 
           <div className="flex items-center gap-2">
+            <CurrencySwitch />
             <Pill icon={<Database className="h-3 w-3" />}>Data Mode: Local demo</Pill>
             <button onClick={() => navigate("/upload")} className="btn-ghost text-xs">
               <Upload className="h-3.5 w-3.5" />
@@ -111,7 +148,7 @@ export function DashboardHeader() {
           <SummaryCell
             icon={<TrendingUp className="h-3.5 w-3.5" />}
             label="Total Value"
-            value={fmtCurrency(portfolio.totalValue, portfolio.baseCurrency, { compact: true })}
+            value={fmtFromBase(portfolio.totalValue, { compact: true })}
             sub={totalValueSub}
           />
           <SummaryCell

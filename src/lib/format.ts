@@ -91,13 +91,16 @@ export function relativeTime(iso: string): string {
   const then = new Date(iso).getTime();
   const now = Date.now();
   const diffSec = Math.round((now - then) / 1000);
-  if (diffSec < 60) return `${diffSec}s ago`;
-  const diffMin = Math.round(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m ago`;
+  const future = diffSec < 0;
+  const abs = Math.abs(diffSec);
+  const phrase = (n: number, unit: string) => (future ? `in ${n}${unit}` : `${n}${unit} ago`);
+  if (abs < 60) return future ? "soon" : `${abs}s ago`;
+  const diffMin = Math.round(abs / 60);
+  if (diffMin < 60) return phrase(diffMin, "m");
   const diffH = Math.round(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
+  if (diffH < 24) return phrase(diffH, "h");
   const diffD = Math.round(diffH / 24);
-  if (diffD < 30) return `${diffD}d ago`;
+  if (diffD < 30) return phrase(diffD, "d");
   return fmtDate(iso);
 }
 

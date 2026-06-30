@@ -16,10 +16,13 @@ import type {
   FieldMappingTrace,
   Holding,
   HoldingStatus,
+  ManagerType,
   ParseError,
   ParseResult,
   ParseWarning,
+  Vehicle,
 } from "./portfolioTypes";
+import { MANAGER_VEHICLES } from "./portfolioTypes";
 import { currencyForGeography, determineBaseCurrency, fxConvert } from "./fx";
 
 // ---------------------------------------------------------------------------
@@ -42,6 +45,11 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   coreSatellite: ["coresatellite", "coresat", "classification", "bucket", "sleeve"],
   benchmark: ["benchmark", "bench", "index"],
   status: ["status", "holdingstatus", "actiontoday", "action"],
+  vehicle: ["vehicle", "wrapper", "structure", "producttype", "holdingvehicle", "accounttype", "holdingtype"],
+  manager: ["manager", "fundmanager", "advisor", "adviser", "amc", "scheme", "schemename", "pms", "aif", "managedby", "fundname"],
+  managerType: ["managertype", "mandate", "managedby2", "inhouseadvisor", "discretion"],
+  familyMember: ["familymember", "owner", "entity", "account", "holder", "member", "beneficialowner", "accountholder"],
+  purchaseDate: ["purchasedate", "buydate", "dateofpurchase", "acquisitiondate", "tradedate", "investmentdate", "sincedate", "datebought"],
 };
 
 const REQUIRED_PER_ROW = ["ticker", "companyName", "quantity", "currentPrice"] as const;
@@ -126,9 +134,72 @@ function normalizeAssetClass(raw: string): AssetClass {
   if (s.includes("bond") || s.includes("debt") || s.includes("fixed")) return "Bond";
   if (s === "cash") return "Cash";
   if (s.includes("comm") || s.includes("gold") || s.includes("silver")) return "Commodity";
-  if (s.includes("alt") || s.includes("real estate") || s.includes("reit")) return "Alternative";
+  if (s.includes("real estate") || s.includes("reit") || s.includes("invit") || s.includes("property")) return "Real Estate";
+  if (s.includes("alt")) return "Alternative";
   if (s.includes("eq") || s.includes("share") || s.includes("stock")) return "Equity";
   return "Equity";
+}
+
+// Map a free-text vehicle/wrapper string onto a canonical Vehicle. Returns
+// null when the column is absent/unrecognized so the caller can infer.
+function normalizeVehicle(raw: string): Vehicle | null {
+  const s = raw.trim().toLowerCase();
+  if (!s) return null;
+  if (s.includes("mutual") || s === "mf" || s.includes("fund of fund") || (s.includes("fund") && !s.includes("hedge"))) return "Mutual Fund";
+  if (s === "pms" || s.includes("portfolio management") || s.includes("portfolio mgmt")) return "PMS";
+  if (s === "aif" || s.includes("alternative investment") || s.includes("cat ii") || s.includes("cat iii") || s.includes("category ii") || s.includes("category iii")) return "AIF";
+  if (s.includes("private") || s.includes("unlisted") || s.includes("pre-ipo") || s.includes("preipo") || s.includes("vc") || s.includes("pe")) return "Private";
+  if (s.includes("gold") || s.includes("sgb") || s.includes("silver") || s.includes("bullion")) return "Gold";
+  if (s.includes("reit") || s.includes("invit") || s.includes("real estate") || s.includes("property")) return "Real Estate";
+  if (s.includes("bond") || s.includes("debt") || s.includes("fixed") || s.includes("ncd") || s.includes("gsec") || s.includes("g-sec")) return "Fixed Income";
+  if (s.includes("direct") || s.includes("equity") || s.includes("listed") || s.includes("demat") || s.includes("cash equity")) return "Direct Equity";
+  return null;
+}
+
+// Infer a vehicle when no column is present, using the strongest signals we
+// have: the parsed asset class and the benchmark string (our sample tags
+// unlisted names with a "Private Markets" benchmark).
+function inferVehicle(assetClass: AssetClass, benchmark: string, companyName: string): Vehicle {
+  const b = benchmark.toLowerCase();
+  const n = companyName.toLowerCase();
+  if (b.includes("private")) return "Private";
+  if (n.includes("mutual fund") || n.includes("flexi cap") || n.includes("flexicap") || n.includes("bluechip") || n.includes("index fund")) return "Mutual Fund";
+  if (assetClass === "Real Estate") return "Real Estate";
+  if (assetClass === "Bond") return "Fixed Income";
+  if (assetClass === "Commodity") return "Gold";
+  if (assetClass === "Alternative") return "Private";
+  return "Direct Equity";
+}
+
+function normalizeManagerType(raw: string, vehicle: Vehicle): ManagerType {
+  const s = raw.trim().toLowerCase();
+  if (s.includes("house") || s.includes("self") || s.includes("direct") || s.includes("internal")) return "In-house";
+  if (s.includes("advis") || s.includes("external") || s.includes("manager") || s.includes("discretion")) return "Advisor";
+  // No explicit value — manager-routed vehicles default to Advisor.
+  return MANAGER_VEHICLES.includes(vehicle) ? "Advisor" : "In-house";
+}
+
+// Parse a date in the loose formats families actually use (yyyy-mm-dd,
+// dd/mm/yyyy, dd-mmm-yyyy, etc.) into an ISO yyyy-mm-dd string. Returns
+// undefined when unparseable so downstream views can show "—".
+function normalizePurchaseDate(raw: string): string | undefined {
+  const s = raw.trim();
+  if (!s) return undefined;
+  // ISO already?
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  // dd/mm/yyyy or dd-mm-yyyy (Indian convention: day first).
+  const dmy = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
+  if (dmy) {
+    const day = dmy[1].padStart(2, "0");
+    const month = dmy[2].padStart(2, "0");
+    let year = dmy[3];
+    if (year.length === 2) year = (Number(year) > 50 ? "19" : "20") + year;
+    return `${year}-${month}-${day}`;
+  }
+  // Fallback to Date parsing (handles "1 Apr 2025", "Apr 1, 2025").
+  const d = new Date(s);
+  if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  return undefined;
 }
 
 // Best-effort geography inference from a ticker string. Used only when
@@ -324,6 +395,17 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
     const statusRaw = toCleanString(get("status"));
     const status: HoldingStatus = normalizeStatus(statusRaw) ?? "Current";
 
+    // Multi-vehicle dimensions. Vehicle drives the consolidated/MF/AIF/PMS
+    // slicing; manager + managerType drive the in-house-vs-advisor view;
+    // familyMember drives the per-entity allocation; purchaseDate drives the
+    // since-purchase vs this-year return windows.
+    const vehicle: Vehicle = normalizeVehicle(toCleanString(get("vehicle"))) ?? inferVehicle(assetClass, benchmark, companyName);
+    const managerRaw = toCleanString(get("manager"));
+    const managerType: ManagerType = normalizeManagerType(toCleanString(get("managerType")), vehicle);
+    const manager = managerRaw || (managerType === "In-house" ? "In-house (Direct)" : "Unassigned Advisor");
+    const familyMember = toCleanString(get("familyMember")) || "Glow Ventures LLP";
+    const purchaseDate = normalizePurchaseDate(toCleanString(get("purchaseDate")));
+
     // Track unmapped columns as extras so downstream views can show them.
     const extra: Record<string, string | number | null> = {};
     for (const t of trace) {
@@ -355,6 +437,11 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
       coreSatellite,
       benchmark,
       status,
+      vehicle,
+      manager,
+      managerType,
+      familyMember,
+      purchaseDate,
       unrealizedPnL,
       returnPct,
       costBasis,
@@ -449,78 +536,106 @@ export function parseRawTable(raw: RawTable, fileName: string): ParseResult {
 // Sample CSV. Surfaced both as an in-app preview and as a download.
 // ---------------------------------------------------------------------------
 
-// All-Indian sample portfolio (listed equities, ETF, plus four unlisted
-// private holdings). Quantities are pre-scaled to family-office size so
-// the demo NAV lands at ~₹17,000 Cr (~$2 B). Prices are illustrative.
-export const SAMPLE_CSV = `ticker,companyName,assetClass,sector,geography,quantity,averageCost,currentPrice,marketValue,portfolioWeight,coreSatellite,benchmark,status
-RELIANCE,Reliance Industries Ltd.,Equity,Energy,India,750000,2380,2912,2184000000,12.5,Core,NIFTY 50,Current
-TCS,Tata Consultancy Services,Equity,Technology,India,450000,3624,4148,1866600000,10.7,Core,NIFTY 50,Current
-HDFCBANK,HDFC Bank Ltd.,Equity,Financials,India,900000,1580,1684,1515600000,8.7,Core,NIFTY 50,Current
-INFY,Infosys Ltd.,Equity,Technology,India,600000,1462,1842,1105200000,6.3,Core,NIFTY 50,Current
-ICICIBANK,ICICI Bank Ltd.,Equity,Financials,India,800000,980,1124,899200000,5.2,Core,NIFTY 50,Current
-ITC,ITC Ltd.,Equity,Consumer Staples,India,1200000,412,468,561600000,3.2,Core,NIFTY 50,Current
-BHARTIARTL,Bharti Airtel Ltd.,Equity,Communication Services,India,500000,1042,1612,806000000,4.6,Core,NIFTY 50,Current
-HINDUNILVR,Hindustan Unilever Ltd.,Equity,Consumer Staples,India,280000,2680,2456,687680000,4.0,Core,NIFTY 50,Current
-LT,Larsen & Toubro Ltd.,Equity,Industrials,India,200000,3140,3582,716400000,4.1,Core,NIFTY 50,Current
-TITAN,Titan Company Ltd.,Equity,Consumer Discretionary,India,220000,3120,3624,797280000,4.6,Satellite,NIFTY 50,Current
-MARUTI,Maruti Suzuki India Ltd.,Equity,Consumer Discretionary,India,80000,9800,11250,900000000,5.2,Satellite,NIFTY 50,Current
-SUNPHARMA,Sun Pharmaceutical Industries,Equity,Healthcare,India,280000,1420,1718,481040000,2.8,Satellite,NIFTY 50,Current
-NIFTYBEES,Nippon India Nifty BeES,ETF,Diversified,India,4000000,218,256,1024000000,5.9,Core,NIFTY 50,Current
-ADANIENT,Adani Enterprises Ltd.,Equity,Industrials,India,60000,2240,2780,166800000,1.0,Satellite,NIFTY 50,Watchlist
-ASIANPAINT,Asian Paints Ltd.,Equity,Materials,India,180000,2820,2412,434160000,2.5,Satellite,NIFTY 50,Watchlist
-BAJFINANCE,Bajaj Finance Ltd.,Equity,Financials,India,90000,6850,7280,655200000,0,Satellite,NIFTY 50,Exited
-RAZORPAY,Razorpay Software Pvt. Ltd.,Alternative,Financials,India,500000,1800,2200,1100000000,6.3,Satellite,Private Markets,Current
-ZERODHA,Zerodha Broking Pvt. Ltd.,Alternative,Financials,India,80000,12000,15000,1200000000,6.9,Satellite,Private Markets,Current
-LENSKART,Lenskart Solutions Pvt. Ltd.,Alternative,Consumer Discretionary,India,300000,1500,1800,540000000,3.1,Satellite,Private Markets,Current
-DREAMSPORTS,Sporta Technologies (Dream11),Alternative,Communication Services,India,120000,3000,3500,420000000,2.4,Satellite,Private Markets,Current
+// All-Indian sample portfolio spanning every vehicle the family described:
+// direct equity (listed + unlisted/private), mutual funds, PMS, AIFs, gold,
+// fixed income, and REIT/InvIT. Each row carries the vehicle, manager,
+// in-house/advisor mandate, owning entity, and purchase date so the
+// consolidated / manager / family / since-purchase views all light up.
+// Quantities are pre-scaled to family-office size (NAV ≈ ₹3,200 Cr / ~$3.9 B);
+// market value and weight are computed by the parser. Prices are illustrative.
+export const SAMPLE_CSV = `ticker,companyName,assetClass,sector,geography,quantity,averageCost,currentPrice,coreSatellite,benchmark,status,vehicle,manager,managerType,familyMember,purchaseDate
+RELIANCE,Reliance Industries Ltd.,Equity,Energy,India,750000,2380,2912,Core,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2023-05-12
+TCS,Tata Consultancy Services,Equity,Technology,India,450000,3624,4148,Core,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2022-11-03
+HDFCBANK,HDFC Bank Ltd.,Equity,Financials,India,900000,1580,1684,Core,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2021-08-19
+INFY,Infosys Ltd.,Equity,Technology,India,600000,1462,1842,Core,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Yamini,2023-02-27
+ICICIBANK,ICICI Bank Ltd.,Equity,Financials,India,800000,980,1124,Core,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Ankita,2024-06-10
+ITC,ITC Ltd.,Equity,Consumer Staples,India,1200000,412,468,Core,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2022-01-15
+BHARTIARTL,Bharti Airtel Ltd.,Equity,Communication Services,India,500000,1042,1612,Core,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Yamini,2023-09-22
+LT,Larsen and Toubro Ltd.,Equity,Industrials,India,200000,3140,3582,Core,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2024-03-05
+TITAN,Titan Company Ltd.,Equity,Consumer Discretionary,India,220000,3120,3624,Satellite,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Ankita,2025-07-18
+SUNPHARMA,Sun Pharmaceutical Industries,Equity,Healthcare,India,280000,1420,1718,Satellite,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Yamini,2025-11-30
+MARUTI,Maruti Suzuki India Ltd.,Equity,Consumer Discretionary,India,80000,9800,11250,Satellite,NIFTY 500,Current,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2024-09-12
+NIFTYBEES,Nippon India Nifty BeES ETF,ETF,Diversified,India,4000000,218,256,Core,NIFTY 50,Current,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2022-07-04
+ADANIENT,Adani Enterprises Ltd.,Equity,Industrials,India,60000,2240,2780,Satellite,NIFTY 500,Watchlist,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2026-05-04
+ASIANPAINT,Asian Paints Ltd.,Equity,Materials,India,180000,2820,2412,Satellite,NIFTY 500,Watchlist,Direct Equity,In-house (Direct),In-house,Ankita,2026-04-22
+BAJFINANCE,Bajaj Finance Ltd.,Equity,Financials,India,90000,6850,7280,Satellite,NIFTY 500,Exited,Direct Equity,In-house (Direct),In-house,Glow Ventures LLP,2024-02-10
+PPFAS-FLEXI,Parag Parikh Flexi Cap Fund,Equity,Diversified,India,15000000,60,78,Core,NIFTY 500,Current,Mutual Fund,Parag Parikh Flexi Cap,Advisor,Yamini,2022-06-01
+HDFC-MIDCAP,HDFC Mid-Cap Opportunities Fund,Equity,Diversified,India,6000000,150,198,Satellite,NIFTY Midcap 150,Current,Mutual Fund,HDFC Mid-Cap Opportunities,Advisor,Ankita,2023-04-15
+ICICI-BLUECHIP,ICICI Prudential Bluechip Fund,Equity,Diversified,India,12000000,80,102,Core,NIFTY 100,Current,Mutual Fund,ICICI Pru Bluechip,Advisor,Glow Ventures LLP,2021-12-08
+NIPPON-SMALLCAP,Nippon India Small Cap Fund,Equity,Diversified,India,5000000,120,178,Satellite,NIFTY Smallcap 250,Current,Mutual Fund,Nippon India Small Cap,Advisor,Yamini,2024-08-20
+SBI-CONTRA,SBI Contra Fund,Equity,Diversified,India,3000000,285,348,Satellite,BSE 500,Current,Mutual Fund,SBI Contra,Advisor,Family Foundation,2026-04-30
+MARCELLUS-CCP,Marcellus Consistent Compounders PMS,Equity,Diversified,India,1000000,1000,1385,Core,NIFTY 500,Current,PMS,Marcellus CCP,Advisor,Glow Ventures LLP,2022-09-15
+MOSL-NTDOP,Motilal Oswal NTDOP PMS,Equity,Diversified,India,700000,1000,1290,Satellite,NIFTY 500,Current,PMS,Motilal Oswal NTDOP,Advisor,Yamini,2023-07-01
+ASK-IEP,ASK Indian Entrepreneur Portfolio PMS,Equity,Diversified,India,800000,1000,1255,Core,NIFTY 500,Current,PMS,ASK IEP,Advisor,Ankita,2024-01-25
+ABAKKUS-EOF,Abakkus Emerging Opportunities Fund,Equity,Diversified,India,600000,1000,1420,Satellite,NIFTY Midcap 150,Current,AIF,Abakkus Emerging Opp,Advisor,Glow Ventures LLP,2023-03-10
+AVENDUS-ARF,Avendus Absolute Return Fund,Alternative,Diversified,India,700000,1000,1180,Satellite,NIFTY 50,Current,AIF,Avendus Absolute Return,Advisor,Family Foundation,2024-05-18
+WHITEOAK-AIF,White Oak India Equity AIF,Equity,Diversified,India,750000,1000,1325,Core,BSE 500,Current,AIF,White Oak India Equity,Advisor,Yamini,2025-02-14
+RAZORPAY,Razorpay Software Pvt. Ltd.,Alternative,Financials,India,500000,1800,2200,Satellite,Private Markets,Current,Private,In-house (Direct),In-house,Glow Ventures LLP,2023-10-01
+ZERODHA,Zerodha Broking Pvt. Ltd.,Alternative,Financials,India,80000,12000,15000,Satellite,Private Markets,Current,Private,In-house (Direct),In-house,Glow Ventures LLP,2022-04-12
+LENSKART,Lenskart Solutions Pvt. Ltd.,Alternative,Consumer Discretionary,India,300000,1500,1800,Satellite,Private Markets,Current,Private,In-house (Direct),In-house,Ankita,2024-11-05
+DREAMSPORTS,Sporta Technologies (Dream11),Alternative,Communication Services,India,120000,3000,3500,Satellite,Private Markets,Current,Private,In-house (Direct),In-house,Yamini,2025-06-20
+SGBGOLD,Sovereign Gold Bond 2032,Commodity,Gold,India,150000,5200,7350,Core,Domestic Gold,Current,Gold,In-house (Direct),In-house,Glow Ventures LLP,2022-08-01
+GOLDBEES,Nippon India Gold ETF,Commodity,Gold,India,1500000,52,71,Satellite,Domestic Gold,Current,Gold,In-house (Direct),In-house,Family Foundation,2024-10-10
+BHARATBOND,Bharat Bond ETF April 2030,Bond,Fixed Income,India,800000,1050,1180,Core,CRISIL Bond Index,Current,Fixed Income,In-house (Direct),In-house,Glow Ventures LLP,2023-06-05
+NHAI-NCD,NHAI Tax-Free Bonds,Bond,Fixed Income,India,700000,1000,1085,Core,CRISIL Bond Index,Current,Fixed Income,In-house (Direct),In-house,Family Foundation,2022-12-12
+EMBASSYREIT,Embassy Office Parks REIT,Real Estate,Real Estate,India,2500000,340,392,Satellite,NIFTY REITs and InvITs,Current,Real Estate,In-house (Direct),In-house,Glow Ventures LLP,2023-11-20
+INDIGRID,IndiGrid InvIT,Real Estate,Real Estate,India,5000000,130,152,Satellite,NIFTY REITs and InvITs,Current,Real Estate,In-house (Direct),In-house,Ankita,2024-07-08
 `;
 
-// Used by the UI to render a clean "what your file should look like" preview.
+// Used by the UI to render a clean "what your file should look like" preview —
+// one direct-equity row, one mutual fund, one PMS, one unlisted private name.
 export const SAMPLE_PREVIEW_ROWS: Array<Record<string, string>> = [
   {
     ticker: "RELIANCE",
     companyName: "Reliance Industries Ltd.",
-    assetClass: "Equity",
     sector: "Energy",
-    geography: "India",
     quantity: "750000",
     averageCost: "2380",
     currentPrice: "2912",
-    marketValue: "2184000000",
-    portfolioWeight: "12.5",
     coreSatellite: "Core",
-    benchmark: "NIFTY 50",
-    status: "Current",
+    vehicle: "Direct Equity",
+    manager: "In-house (Direct)",
+    familyMember: "Glow Ventures LLP",
+    purchaseDate: "2023-05-12",
+  },
+  {
+    ticker: "PPFAS-FLEXI",
+    companyName: "Parag Parikh Flexi Cap Fund",
+    sector: "Diversified",
+    quantity: "15000000",
+    averageCost: "60",
+    currentPrice: "78",
+    coreSatellite: "Core",
+    vehicle: "Mutual Fund",
+    manager: "Parag Parikh Flexi Cap",
+    familyMember: "Yamini",
+    purchaseDate: "2022-06-01",
+  },
+  {
+    ticker: "MARCELLUS-CCP",
+    companyName: "Marcellus Consistent Compounders PMS",
+    sector: "Diversified",
+    quantity: "1000000",
+    averageCost: "1000",
+    currentPrice: "1385",
+    coreSatellite: "Core",
+    vehicle: "PMS",
+    manager: "Marcellus CCP",
+    familyMember: "Glow Ventures LLP",
+    purchaseDate: "2022-09-15",
   },
   {
     ticker: "RAZORPAY",
     companyName: "Razorpay Software Pvt. Ltd.",
-    assetClass: "Alternative",
     sector: "Financials",
-    geography: "India",
     quantity: "500000",
     averageCost: "1800",
     currentPrice: "2200",
-    marketValue: "1100000000",
-    portfolioWeight: "6.3",
     coreSatellite: "Satellite",
-    benchmark: "Private Markets",
-    status: "Current",
-  },
-  {
-    ticker: "BAJFINANCE",
-    companyName: "Bajaj Finance Ltd.",
-    assetClass: "Equity",
-    sector: "Financials",
-    geography: "India",
-    quantity: "90000",
-    averageCost: "6850",
-    currentPrice: "7280",
-    marketValue: "655200000",
-    portfolioWeight: "0",
-    coreSatellite: "Satellite",
-    benchmark: "NIFTY 50",
-    status: "Exited",
+    vehicle: "Private",
+    manager: "In-house (Direct)",
+    familyMember: "Glow Ventures LLP",
+    purchaseDate: "2023-10-01",
   },
 ];
 

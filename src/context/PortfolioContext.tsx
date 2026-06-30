@@ -29,6 +29,20 @@ import {
 } from "@/lib/portfolioStorage";
 import { parsePortfolioFile } from "@/lib/portfolioParser";
 import { diffPortfolios } from "@/lib/portfolioDiff";
+import { fxConvert, type DisplayCurrency } from "@/lib/fx";
+import { fmtCurrency } from "@/lib/format";
+
+const DISPLAY_CCY_KEY = "fo:displayCurrency";
+
+function readDisplayCurrency(): DisplayCurrency | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = window.localStorage.getItem(DISPLAY_CCY_KEY);
+    return v === "USD" || v === "INR" || v === "EUR" || v === "GBP" ? v : null;
+  } catch {
+    return null;
+  }
+}
 
 // Result of a parse step that's awaiting user confirmation to commit.
 export type StagedUpload = {
@@ -49,6 +63,14 @@ type PortfolioContextValue = {
   cancelStagedUpload: () => void;
 
   clearPortfolio: () => void;            // wipes everything (active + history)
+
+  // Global display currency. Aggregate values across the app are stored in the
+  // portfolio's base currency (the *Base fields); the display layer converts
+  // them to whatever the user picks here. Live USD/INR/EUR/GBP toggle.
+  displayCurrency: DisplayCurrency;
+  setDisplayCurrency: (c: DisplayCurrency) => void;
+  convertFromBase: (amount: number) => number;             // base ccy -> display ccy
+  fmtFromBase: (amount: number, opts?: { compact?: boolean; sign?: boolean }) => string;
 };
 
 const PortfolioContext = createContext<PortfolioContextValue | null>(null);
@@ -59,6 +81,31 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const [staged, setStaged] = useState<StagedUpload | null>(null);
   const [stagingError, setStagingError] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
+  const [displayOverride, setDisplayOverride] = useState<DisplayCurrency | null>(() => readDisplayCurrency());
+
+  // Effective display currency: the user's explicit pick, else follow the
+  // active portfolio's base currency, else INR (our India-first default).
+  const displayCurrency: DisplayCurrency = displayOverride ?? portfolio?.baseCurrency ?? "INR";
+
+  const setDisplayCurrency = useCallback((c: DisplayCurrency) => {
+    setDisplayOverride(c);
+    try {
+      window.localStorage.setItem(DISPLAY_CCY_KEY, c);
+    } catch {
+      /* localStorage unavailable — non-fatal */
+    }
+  }, []);
+
+  const baseCurrency = portfolio?.baseCurrency ?? "INR";
+  const convertFromBase = useCallback(
+    (amount: number) => fxConvert(amount, baseCurrency, displayCurrency),
+    [baseCurrency, displayCurrency],
+  );
+  const fmtFromBase = useCallback(
+    (amount: number, opts?: { compact?: boolean; sign?: boolean }) =>
+      fmtCurrency(fxConvert(amount, baseCurrency, displayCurrency), displayCurrency, opts),
+    [baseCurrency, displayCurrency],
+  );
 
   // Keep localStorage in sync with state changes (paranoia — every setter
   // also writes, but this catches edge cases like programmatic resets).
@@ -180,6 +227,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       commitStagedUpload,
       cancelStagedUpload,
       clearPortfolio,
+      displayCurrency,
+      setDisplayCurrency,
+      convertFromBase,
+      fmtFromBase,
     }),
     [
       portfolio,
@@ -191,6 +242,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       commitStagedUpload,
       cancelStagedUpload,
       clearPortfolio,
+      displayCurrency,
+      setDisplayCurrency,
+      convertFromBase,
+      fmtFromBase,
     ],
   );
 

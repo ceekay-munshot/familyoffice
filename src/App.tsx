@@ -13,6 +13,14 @@ import { SectorIntelligence } from "@/pages/SectorIntelligence";
 import { Recommendations } from "@/pages/Recommendations";
 import { UploadHistory } from "@/pages/UploadHistory";
 import { SourcesEvidence } from "@/pages/SourcesEvidence";
+import { LookThrough } from "@/pages/LookThrough";
+import { FamilyEntities } from "@/pages/FamilyEntities";
+import { FundAnalytics } from "@/pages/FundAnalytics";
+import { CorporateActions } from "@/pages/CorporateActions";
+import { CapitalGains } from "@/pages/CapitalGains";
+import { Liquidity } from "@/pages/Liquidity";
+import { AskMunshot } from "@/pages/AskMunshot";
+import { DataSources } from "@/pages/DataSources";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { EmptyState } from "@/components/EmptyState";
 
@@ -44,12 +52,20 @@ export default function App() {
             <Route path="/upload" element={<UploadPortfolio />} />
             <Route path="/cio" element={<Gate><MorningCIO /></Gate>} />
             <Route path="/monitor" element={<Gate><PortfolioMonitor /></Gate>} />
+            <Route path="/ask" element={<Gate><AskMunshot /></Gate>} />
+            <Route path="/look-through" element={<Gate><LookThrough /></Gate>} />
+            <Route path="/family" element={<Gate><FamilyEntities /></Gate>} />
             <Route path="/core-satellite" element={<Gate><CoreSatellite /></Gate>} />
             <Route path="/sectors" element={<Gate><SectorComposition /></Gate>} />
             <Route path="/risk" element={<Gate><RiskPerformance /></Gate>} />
+            <Route path="/funds" element={<Gate><FundAnalytics /></Gate>} />
+            <Route path="/capital-gains" element={<Gate><CapitalGains /></Gate>} />
+            <Route path="/liquidity" element={<Gate><Liquidity /></Gate>} />
+            <Route path="/corporate-actions" element={<Gate><CorporateActions /></Gate>} />
             <Route path="/research" element={<Gate><BrokerResearch /></Gate>} />
             <Route path="/intelligence" element={<Gate><SectorIntelligence /></Gate>} />
             <Route path="/recommendations" element={<Gate><Recommendations /></Gate>} />
+            <Route path="/data-sources" element={<Gate><DataSources /></Gate>} />
             <Route path="/history" element={<UploadHistory />} />
             <Route path="/sources" element={<Gate><SourcesEvidence /></Gate>} />
             <Route path="*" element={<RootRedirect />} />

@@ -14,8 +14,8 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { Pill } from "@/components/Pill";
-import { activeHoldings, holdingsByCoreSatellite, usePortfolio } from "@/context/PortfolioContext";
-import { changeColor, fmtCurrency, fmtPct } from "@/lib/format";
+import { holdingsByCoreSatellite, usePortfolio } from "@/context/PortfolioContext";
+import { changeColor, fmtPct } from "@/lib/format";
 import { chartTooltipStyle, chartTooltipItemStyle } from "@/lib/chartTheme";
 
 // Default IC target if the upload doesn't specify one.
@@ -23,7 +23,7 @@ const DEFAULT_CORE_TARGET = 0.7;
 const DEFAULT_SATELLITE_TARGET = 0.3;
 
 export function CoreSatellite() {
-  const { portfolio } = usePortfolio();
+  const { portfolio, fmtFromBase } = usePortfolio();
   if (!portfolio) return null;
 
   const cs = holdingsByCoreSatellite(portfolio);
@@ -70,7 +70,7 @@ export function CoreSatellite() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(v: number) => fmtCurrency(v, portfolio.baseCurrency, { compact: true })}
+                  formatter={(v: number) => fmtFromBase(v, { compact: true })}
                   contentStyle={chartTooltipStyle} itemStyle={chartTooltipItemStyle}
                 />
               </PieChart>
@@ -78,7 +78,7 @@ export function CoreSatellite() {
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <div className="label-xs">Active NAV</div>
               <div className="mt-1 text-lg font-semibold tabular text-slate-100">
-                {fmtCurrency(equityTotal, portfolio.baseCurrency, { compact: true })}
+                {fmtFromBase(equityTotal, { compact: true })}
               </div>
             </div>
           </div>
@@ -137,7 +137,7 @@ export function CoreSatellite() {
           const holdings = cs[sleeve].sort((a, b) => mvOf(b) - mvOf(a));
           const sleeveMV = holdings.reduce((s, h) => s + mvOf(h), 0);
           return (
-            <Card key={sleeve} title={`${sleeve} sleeve`} subtitle={`${holdings.length} positions · ${fmtCurrency(sleeveMV, portfolio.baseCurrency, { compact: true })}`} pad={false}>
+            <Card key={sleeve} title={`${sleeve} sleeve`} subtitle={`${holdings.length} positions · ${fmtFromBase(sleeveMV, { compact: true })}`} pad={false}>
               {holdings.length === 0 ? (
                 <div className="px-4 py-8 text-center text-xs text-slate-500">
                   No holdings classified as {sleeve}.
@@ -161,7 +161,7 @@ export function CoreSatellite() {
                           <td className="px-4 py-2 mono font-semibold text-slate-100">{h.ticker}</td>
                           <td className="px-4 py-2 text-slate-400 truncate max-w-[200px]">{h.companyName}</td>
                           <td className="px-4 py-2 text-right mono text-slate-200">
-                            {fmtCurrency(mv, portfolio.baseCurrency, { compact: true })}
+                            {fmtFromBase(mv, { compact: true })}
                           </td>
                           <td className="px-4 py-2 text-right mono text-slate-300">
                             {sleeveMV > 0 ? ((mv / sleeveMV) * 100).toFixed(1) : "0"}%

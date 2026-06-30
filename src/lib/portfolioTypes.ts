@@ -10,7 +10,40 @@ export type AssetClass =
   | "Cash"
   | "Alternative"
   | "Commodity"
+  | "Real Estate"
   | "Other";
+
+// How a position is held / who manages it. This is the dimension the family
+// asked for repeatedly: a consolidated view, then mutual funds, AIFs, PMS,
+// and direct equity as separate slices ("with managers" / "without managers").
+export type Vehicle =
+  | "Direct Equity"
+  | "Mutual Fund"
+  | "PMS"
+  | "AIF"
+  | "Private"
+  | "Fixed Income"
+  | "Gold"
+  | "Real Estate";
+
+// In-house (self-managed direct book) vs an external advisor/manager. Drives
+// the "how much are we doing in-house vs advisor" attribution view.
+export type ManagerType = "In-house" | "Advisor";
+
+// Vehicles routed through an external manager — used for the "with managers /
+// direct only" toggle and the in-house-vs-advisor split.
+export const MANAGER_VEHICLES: Vehicle[] = ["Mutual Fund", "PMS", "AIF"];
+
+export const ALL_VEHICLES: Vehicle[] = [
+  "Direct Equity",
+  "Mutual Fund",
+  "PMS",
+  "AIF",
+  "Private",
+  "Fixed Income",
+  "Gold",
+  "Real Estate",
+];
 
 // One row in the parsed portfolio.
 export type Holding = {
@@ -27,6 +60,17 @@ export type Holding = {
   coreSatellite: CoreSatellite;
   benchmark: string;
   status: HoldingStatus;
+
+  // --- Multi-vehicle dimensions ---------------------------------------------
+  // How the position is held and who manages it. Optional on the type for
+  // backward compatibility with portfolios persisted before this landed; the
+  // parser always fills them, and the storage layer back-fills sensible
+  // defaults for older snapshots so every page can rely on them.
+  vehicle?: Vehicle;          // Direct Equity / Mutual Fund / PMS / AIF / …
+  manager?: string;           // "Marcellus PMS", "Parag Parikh Flexi Cap", "In-house"
+  managerType?: ManagerType;  // In-house vs Advisor
+  familyMember?: string;      // owning entity / family member ("Glow Ventures LLP", "Yamini")
+  purchaseDate?: string;      // ISO yyyy-mm-dd — when the position was first taken
 
   // Derived for the dashboard (computed in the parser, not user-supplied).
   unrealizedPnL: number;      // qty * (currentPrice - averageCost) — native currency
