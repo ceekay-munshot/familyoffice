@@ -155,6 +155,22 @@ html:not(.dark) .bg-slate-700\/60 { background-color: rgba(217, 207, 184, 0.5); 
 html:not(.dark) .bg-slate-700\/40 { background-color: rgba(217, 207, 184, 0.4); }
 html:not(.dark) .bg-slate-700\/30 { background-color: rgba(217, 207, 184, 0.3); }
 
+/* Hover / group-hover variants.
+   Tailwind emits these as their own selectors (.hover\:bg-slate-800\/30:hover),
+   which the plain .bg-slate-800\/30 rules above do NOT match — so without these
+   the light theme fell back to the DARK palette on hover and dark text landed on
+   a near-black surface (invisible row text). Keep each value in step with its
+   non-hover counterpart. */
+html:not(.dark) .hover\:bg-slate-800\/20:hover { background-color: rgba(235, 226, 203, 0.35); }
+html:not(.dark) .hover\:bg-slate-800\/30:hover { background-color: rgba(235, 226, 203, 0.45); }
+html:not(.dark) .hover\:bg-slate-800\/40:hover { background-color: rgba(235, 226, 203, 0.55); }
+html:not(.dark) .hover\:bg-slate-800\/60:hover { background-color: rgba(235, 226, 203, 0.7); }
+html:not(.dark) .hover\:bg-ink-700\/50:hover { background-color: rgba(251, 246, 232, 0.8); }
+html:not(.dark) .hover\:bg-ink-700\/60:hover { background-color: rgba(251, 246, 232, 0.9); }
+/* Sticky first column: must stay opaque to occlude scrolled cells, so use the
+   solid blend of the row-hover tint over the white card surface. */
+html:not(.dark) .group:hover .group-hover\:bg-ink-700 { background-color: #f6f2e8; }
+
 /* Borders */
 html:not(.dark) .border-slate-700 { border-color: #d9cfb8; }
 html:not(.dark) .border-slate-800 { border-color: #e6dcc6; }
